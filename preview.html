@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>空のWebサイト</title>
+  <title>日課チェック！！ - チェックカレンダー</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -15,18 +15,26 @@
       background-color: #f8fafd;
       user-select: none;
     }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 </head>
 <body class="flex flex-col h-screen w-screen overflow-hidden text-[#3c4043] antialiased">
 
   <!-- ブラウザ風タイトルバー（画像の「空のWebサイト」） -->
-  <div class="bg-[#202124] text-[#e8eaed] text-xs px-3 py-1 flex items-center select-none shrink-0 border-b border-[#3c4043]/40">
+  <div class="bg-[#202124] text-[#e8eaed] text-xs px-3 py-1 flex items-center justify-between select-none shrink-0 border-b border-[#3c4043]/40">
     <span class="font-medium tracking-wide">空のWebサイト</span>
+    <span class="text-[11px] text-gray-400">チェックカレンダー v1.0</span>
   </div>
 
   <div class="flex flex-1 overflow-hidden relative">
     <!-- サイドバー (トグル可能) -->
-    <aside id="sidebar" class="hidden w-[256px] min-w-[256px] bg-[#f8fafd] flex-col pt-3 px-3 z-30 select-none border-r border-gray-200/60">
+    <aside id="sidebar" class="hidden w-[260px] min-w-[260px] bg-[#f8fafd] flex-col pt-3 px-3 z-30 select-none border-r border-gray-200/70">
       <!-- サイドバー最上部: 閉じる✕ボタン -->
       <div class="flex items-center h-10 mb-2 pl-1">
         <button id="closeSidebarBtn" class="p-2 rounded-full hover:bg-gray-200 transition-colors text-gray-700" title="メニューを閉じる">
@@ -36,7 +44,7 @@
 
       <!-- + 作成 ▾ ボタン -->
       <div class="mb-5 pl-1">
-        <button class="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white border border-gray-200/70 shadow-[0_1px_3px_0_rgba(60,64,67,0.3),0_4px_8px_3px_rgba(60,64,67,0.15)] hover:shadow-[0_2px_6px_2px_rgba(60,64,67,0.3),0_6px_10px_4px_rgba(60,64,67,0.15)] transition-shadow">
+        <button id="createEventBtn" class="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white border border-gray-200/80 shadow-[0_1px_3px_0_rgba(60,64,67,0.3),0_4px_8px_3px_rgba(60,64,67,0.15)] hover:shadow-[0_2px_6px_2px_rgba(60,64,67,0.3),0_6px_10px_4px_rgba(60,64,67,0.15)] transition-all cursor-pointer group">
           <i data-lucide="plus" class="w-5 h-5 text-[#3c4043] stroke-[2.4]"></i>
           <span class="text-sm font-medium text-gray-700">作成</span>
           <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500 ml-0.5"></i>
@@ -46,12 +54,12 @@
       <!-- ミニカレンダー -->
       <div class="px-1">
         <div class="flex items-center justify-between mb-2 px-1">
-          <span class="text-sm font-medium text-gray-700">2026年 11月</span>
+          <span id="miniMonthTitle" class="text-sm font-medium text-gray-700">2026年 11月</span>
           <div class="flex items-center space-x-0.5 text-gray-600">
-            <button class="p-1 rounded-full hover:bg-gray-200 transition-colors">
+            <button id="miniPrevBtn" class="p-1 rounded-full hover:bg-gray-200 transition-colors">
               <i data-lucide="chevron-left" class="w-4 h-4"></i>
             </button>
-            <button class="p-1 rounded-full hover:bg-gray-200 transition-colors">
+            <button id="miniNextBtn" class="p-1 rounded-full hover:bg-gray-200 transition-colors">
               <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </button>
           </div>
@@ -71,6 +79,20 @@
         <!-- ミニカレンダー 日付マス -->
         <div id="miniCalendarGrid" class="grid grid-cols-7 text-center text-xs"></div>
       </div>
+
+      <!-- 進捗バー -->
+      <div class="mt-6 pt-4 border-t border-gray-200/80 px-2">
+        <div class="flex items-center justify-between text-xs font-medium text-gray-600 mb-2">
+          <span class="flex items-center gap-1.5">
+            <i data-lucide="check-square" class="w-3.5 h-3.5 text-[#1a73e8]"></i>
+            タスク進捗
+          </span>
+          <span id="taskProgressText" class="text-[11px] bg-blue-50 text-[#1a73e8] px-2 py-0.5 rounded-full">0 / 0 完了</span>
+        </div>
+        <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+          <div id="taskProgressBar" class="bg-[#1a73e8] h-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
     </aside>
 
     <!-- メインカレンダー領域 -->
@@ -86,35 +108,45 @@
           </button>
 
           <!-- 「今日」ボタン -->
-          <button class="px-4 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
+          <button id="todayBtn" class="px-4 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
             今日
           </button>
 
           <!-- 前月・次月ボタン -->
           <div class="flex items-center space-x-1">
-            <button class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors">
+            <button id="prevMonthBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="前月">
               <i data-lucide="chevron-left" class="w-4 h-4"></i>
             </button>
-            <button class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors">
+            <button id="nextMonthBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="次月">
               <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </button>
           </div>
 
           <!-- 年月表示 -->
-          <h1 class="text-xl font-medium text-gray-800 ml-2 tracking-tight">
+          <h1 id="mainMonthTitle" class="text-xl font-medium text-gray-800 ml-2 tracking-tight">
             2026年 11月
           </h1>
         </div>
 
         <!-- 右側: 検索・ヘルプ・設定・表示切替 -->
         <div class="flex items-center space-x-1 sm:space-x-2">
-          <button class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="検索">
+          <!-- 検索インプット -->
+          <div id="searchContainer" class="hidden items-center bg-gray-100 rounded-full px-3 py-1 border border-gray-300">
+            <i data-lucide="search" class="w-4 h-4 text-gray-500 mr-2"></i>
+            <input id="searchInput" type="text" placeholder="予定やタスクを検索..." class="bg-transparent border-none outline-none text-xs text-gray-700 w-36 sm:w-48">
+            <button id="closeSearchBtn" class="text-gray-400 hover:text-gray-600 ml-1">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+          <button id="openSearchBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="検索">
             <i data-lucide="search" class="w-5 h-5"></i>
           </button>
-          <button class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="サポート">
+
+          <button onclick="alert('【チェックカレンダーの使い方】\n・カレンダーの日付マスをクリックして新しい予定やタスクを追加できます。\n・タスクの左のチェックボックスをクリックすると完了/未完了が切り替わります。\n・前月・次月ボタンや「今日」ボタンで月送りできます。')" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="サポート">
             <i data-lucide="help-circle" class="w-5 h-5"></i>
           </button>
-          <button class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="設定">
+
+          <button id="resetDataBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="データ初期化">
             <i data-lucide="settings" class="w-5 h-5"></i>
           </button>
 
@@ -130,174 +162,462 @@
       <main class="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
         <!-- 曜日ヘッダー -->
         <div class="grid grid-cols-7 border-b border-gray-200 text-center py-2 text-xs font-medium text-gray-500 bg-white">
-          <div class="flex justify-center"><span>日</span></div>
+          <div class="flex justify-center"><span class="text-red-500">日</span></div>
           <div class="flex justify-center"><span>月</span></div>
           <div class="flex justify-center"><span>火</span></div>
           <div class="flex justify-center"><span>水</span></div>
           <div class="flex justify-center"><span>木</span></div>
           <div class="flex justify-center"><span>金</span></div>
-          <div class="flex justify-center"><span>土</span></div>
+          <div class="flex justify-center"><span class="text-blue-500">土</span></div>
         </div>
 
-        <!-- カレンダーグリッド (5行×7列) -->
-        <div id="mainCalendarGrid" class="flex-1 grid grid-cols-7 grid-rows-5 bg-white"></div>
+        <!-- カレンダーグリッド -->
+        <div id="mainCalendarGrid" class="flex-1 grid grid-cols-7 bg-white"></div>
       </main>
     </div>
   </div>
 
+  <!-- イベント作成・編集モーダル -->
+  <div id="eventModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-100">
+        <h3 id="modalTitle" class="text-base font-semibold text-gray-800 flex items-center gap-2">
+          <i data-lucide="check-square" class="w-4 h-4 text-[#1a73e8]"></i>
+          予定・チェック項目の作成
+        </h3>
+        <button id="modalCloseBtn" class="p-1.5 rounded-full hover:bg-gray-200 text-gray-500 transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <form id="eventForm" class="p-6 space-y-4">
+        <input type="hidden" id="eventId">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">タイトル</label>
+          <input id="eventTitleInput" type="text" required placeholder="例: 会議、買い物、課題提出" class="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">日付</label>
+          <input id="eventDateInput" type="date" required class="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">カラー</label>
+          <div class="flex items-center gap-3" id="colorPickerGroup">
+            <button type="button" data-color="blue" class="color-btn w-7 h-7 rounded-full bg-[#1a73e8] ring-2 ring-offset-2 ring-blue-500 scale-125 transition-all"></button>
+            <button type="button" data-color="green" class="color-btn w-7 h-7 rounded-full bg-[#137333] transition-all"></button>
+            <button type="button" data-color="red" class="color-btn w-7 h-7 rounded-full bg-[#d93025] transition-all"></button>
+            <button type="button" data-color="yellow" class="color-btn w-7 h-7 rounded-full bg-[#f9ab00] transition-all"></button>
+            <button type="button" data-color="purple" class="color-btn w-7 h-7 rounded-full bg-[#a142f4] transition-all"></button>
+          </div>
+        </div>
+        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+          <button type="button" id="deleteEventBtn" class="hidden items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            削除
+          </button>
+          <div class="flex items-center space-x-2 ml-auto">
+            <button type="button" id="modalCancelBtn" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-xl">キャンセル</button>
+            <button type="submit" class="px-5 py-2 text-xs font-medium bg-[#1a73e8] hover:bg-[#174ea6] text-white rounded-xl shadow-xs">保存</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
-    // データ定義
-    const calendarDays = [
-      { id: '2026-11-01', display: '11月1日', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-02', display: '2', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-03', display: '3', isCurrentMonth: true, isToday: false, event: '文化の日' },
-      { id: '2026-11-04', display: '4', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-05', display: '5', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-06', display: '6', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-07', display: '7', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-08', display: '8', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-09', display: '9', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-10', display: '10', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-11', display: '11', isCurrentMonth: true, isToday: true, event: null },
-      { id: '2026-11-12', display: '12', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-13', display: '13', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-14', display: '14', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-15', display: '15', isCurrentMonth: true, isToday: false, event: '七五三' },
-      { id: '2026-11-16', display: '16', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-17', display: '17', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-18', display: '18', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-19', display: '19', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-20', display: '20', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-21', display: '21', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-22', display: '22', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-23', display: '23', isCurrentMonth: true, isToday: false, event: '勤労感謝の日' },
-      { id: '2026-11-24', display: '24', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-25', display: '25', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-26', display: '26', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-27', display: '27', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-28', display: '28', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-29', display: '29', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-11-30', display: '30', isCurrentMonth: true, isToday: false, event: null },
-      { id: '2026-12-01', display: '12月1日', isCurrentMonth: false, isToday: false, event: null },
-      { id: '2026-12-02', display: '2', isCurrentMonth: false, isToday: false, event: null },
-      { id: '2026-12-03', display: '3', isCurrentMonth: false, isToday: false, event: null },
-      { id: '2026-12-04', display: '4', isCurrentMonth: false, isToday: false, event: null },
-      { id: '2026-12-05', display: '5', isCurrentMonth: false, isToday: false, event: null },
+    // 初期データ
+    const DEFAULT_EVENTS = [
+      { id: 'ev-1', title: '文化の日', date: '2026-11-03', color: 'green', isCompleted: false, isHoliday: true },
+      { id: 'ev-2', title: '七五三', date: '2026-11-15', color: 'green', isCompleted: false, isHoliday: true },
+      { id: 'ev-3', title: '勤労感謝の日', date: '2026-11-23', color: 'green', isCompleted: false, isHoliday: true },
     ];
 
-    const miniDays = [
-      { num: 1, isCurrent: true, isSelected: true, isToday: false },
-      { num: 2, isCurrent: true, isSelected: false, isToday: false },
-      { num: 3, isCurrent: true, isSelected: false, isToday: false },
-      { num: 4, isCurrent: true, isSelected: false, isToday: false },
-      { num: 5, isCurrent: true, isSelected: false, isToday: false },
-      { num: 6, isCurrent: true, isSelected: false, isToday: false },
-      { num: 7, isCurrent: true, isSelected: false, isToday: false },
-      { num: 8, isCurrent: true, isSelected: false, isToday: false },
-      { num: 9, isCurrent: true, isSelected: false, isToday: false },
-      { num: 10, isCurrent: true, isSelected: false, isToday: false },
-      { num: 11, isCurrent: true, isSelected: false, isToday: true },
-      { num: 12, isCurrent: true, isSelected: false, isToday: false },
-      { num: 13, isCurrent: true, isSelected: false, isToday: false },
-      { num: 14, isCurrent: true, isSelected: false, isToday: false },
-      { num: 15, isCurrent: true, isSelected: false, isToday: false },
-      { num: 16, isCurrent: true, isSelected: false, isToday: false },
-      { num: 17, isCurrent: true, isSelected: false, isToday: false },
-      { num: 18, isCurrent: true, isSelected: false, isToday: false },
-      { num: 19, isCurrent: true, isSelected: false, isToday: false },
-      { num: 20, isCurrent: true, isSelected: false, isToday: false },
-      { num: 21, isCurrent: true, isSelected: false, isToday: false },
-      { num: 22, isCurrent: true, isSelected: false, isToday: false },
-      { num: 23, isCurrent: true, isSelected: false, isToday: false },
-      { num: 24, isCurrent: true, isSelected: false, isToday: false },
-      { num: 25, isCurrent: true, isSelected: false, isToday: false },
-      { num: 26, isCurrent: true, isSelected: false, isToday: false },
-      { num: 27, isCurrent: true, isSelected: false, isToday: false },
-      { num: 28, isCurrent: true, isSelected: false, isToday: false },
-      { num: 29, isCurrent: true, isSelected: false, isToday: false },
-      { num: 30, isCurrent: true, isSelected: false, isToday: false },
-      { num: 1, isCurrent: false, isSelected: false, isToday: false },
-      { num: 2, isCurrent: false, isSelected: false, isToday: false },
-      { num: 3, isCurrent: false, isSelected: false, isToday: false },
-      { num: 4, isCurrent: false, isSelected: false, isToday: false },
-      { num: 5, isCurrent: false, isSelected: false, isToday: false },
-      { num: 6, isCurrent: false, isSelected: false, isToday: false },
-      { num: 7, isCurrent: false, isSelected: false, isToday: false },
-      { num: 8, isCurrent: false, isSelected: false, isToday: false },
-      { num: 9, isCurrent: false, isSelected: false, isToday: false },
-      { num: 10, isCurrent: false, isSelected: false, isToday: false },
-      { num: 11, isCurrent: false, isSelected: false, isToday: false },
-      { num: 12, isCurrent: false, isSelected: false, isToday: false },
-    ];
+    let events = [];
+    try {
+      const saved = localStorage.getItem('check_calendar_events');
+      events = saved ? JSON.parse(saved) : DEFAULT_EVENTS;
+    } catch(e) {
+      events = DEFAULT_EVENTS;
+    }
 
-    // メインカレンダー描画
-    const mainGrid = document.getElementById('mainCalendarGrid');
-    calendarDays.forEach((day, idx) => {
-      const isColRightBorder = (idx + 1) % 7 !== 0;
-      const isRowBottomBorder = idx < 28;
+    function saveEvents() {
+      localStorage.setItem('check_calendar_events', JSON.stringify(events));
+      updateProgress();
+    }
 
-      const cell = document.createElement('div');
-      cell.className = `flex flex-col p-1.5 relative group hover:bg-gray-50/40 transition-colors ${
-        isColRightBorder ? 'border-r border-gray-200' : ''
-      } ${isRowBottomBorder ? 'border-b border-gray-200' : ''}`;
+    let currentYear = 2026;
+    let currentMonth = 11;
+    let selectedDate = '2026-11-01';
+    const todayKey = '2026-11-11';
+    let currentColor = 'blue';
+    let searchQuery = '';
 
-      const dateHeader = document.createElement('div');
-      dateHeader.className = 'flex justify-center items-center h-7 mb-1';
+    function formatDateKey(y, m, d) {
+      return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    }
 
-      if (day.isToday) {
-        dateHeader.innerHTML = `<div class="w-6 h-6 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-xs font-medium">${day.display}</div>`;
+    const colorClasses = {
+      green: { bg: 'bg-[#137333]', text: 'text-white' },
+      blue: { bg: 'bg-[#1a73e8]', text: 'text-white' },
+      red: { bg: 'bg-[#d93025]', text: 'text-white' },
+      yellow: { bg: 'bg-[#f9ab00]', text: 'text-[#202124]' },
+      purple: { bg: 'bg-[#a142f4]', text: 'text-white' },
+    };
+
+    function renderMainCalendar() {
+      document.getElementById('mainMonthTitle').textContent = `${currentYear}年 ${currentMonth}月`;
+      document.getElementById('miniMonthTitle').textContent = `${currentYear}年 ${currentMonth}月`;
+
+      const mainGrid = document.getElementById('mainCalendarGrid');
+      mainGrid.innerHTML = '';
+
+      const firstDay = new Date(currentYear, currentMonth - 1, 1);
+      const startDay = firstDay.getDay();
+      const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+      const daysInPrev = new Date(currentYear, currentMonth - 1, 0).getDate();
+
+      const days = [];
+      for (let i = startDay - 1; i >= 0; i--) {
+        const d = daysInPrev - i;
+        const prevDate = new Date(currentYear, currentMonth - 2, d);
+        days.push({
+          dateKey: formatDateKey(prevDate.getFullYear(), prevDate.getMonth() + 1, d),
+          display: d === 1 ? `${prevDate.getMonth() + 1}月1日` : `${d}`,
+          isCurrent: false,
+          dayNum: d
+        });
+      }
+      for (let d = 1; d <= daysInMonth; d++) {
+        days.push({
+          dateKey: formatDateKey(currentYear, currentMonth, d),
+          display: d === 1 ? `${currentMonth}月1日` : `${d}`,
+          isCurrent: true,
+          dayNum: d
+        });
+      }
+      const totalSlots = days.length <= 35 ? 35 : 42;
+      const remaining = totalSlots - days.length;
+      for (let d = 1; d <= remaining; d++) {
+        const nextDate = new Date(currentYear, currentMonth, d);
+        days.push({
+          dateKey: formatDateKey(nextDate.getFullYear(), nextDate.getMonth() + 1, d),
+          display: d === 1 ? `${nextDate.getMonth() + 1}月1日` : `${d}`,
+          isCurrent: false,
+          dayNum: d
+        });
+      }
+
+      mainGrid.className = `flex-1 grid grid-cols-7 ${totalSlots > 35 ? 'grid-rows-6' : 'grid-rows-5'} bg-white`;
+
+      days.forEach((cell, idx) => {
+        const isColRight = (idx + 1) % 7 !== 0;
+        const totalRows = totalSlots / 7;
+        const isRowBottom = Math.floor(idx / 7) < totalRows - 1;
+
+        const cellDiv = document.createElement('div');
+        cellDiv.className = `flex flex-col p-1.5 relative group hover:bg-blue-50/30 transition-colors cursor-pointer overflow-hidden ${
+          isColRight ? 'border-r border-gray-200' : ''
+        } ${isRowBottom ? 'border-b border-gray-200' : ''} ${
+          selectedDate === cell.dateKey ? 'bg-blue-50/20' : ''
+        }`;
+
+        cellDiv.onclick = () => {
+          selectedDate = cell.dateKey;
+          openModal(cell.dateKey);
+        };
+
+        const isToday = cell.dateKey === todayKey;
+        let dayHeaderHtml = '';
+        if (isToday) {
+          dayHeaderHtml = `<div class="w-6 h-6 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-xs font-medium shadow-xs">${cell.dayNum}</div>`;
+        } else {
+          const colIdx = idx % 7;
+          let textColor = cell.isCurrent ? 'text-gray-800' : 'text-gray-400 font-light';
+          if (cell.isCurrent) {
+            if (colIdx === 0) textColor = 'text-red-600';
+            else if (colIdx === 6) textColor = 'text-blue-600';
+          }
+          dayHeaderHtml = `<span class="text-xs ${textColor}">${cell.display}</span>`;
+        }
+
+        const dateHeader = document.createElement('div');
+        dateHeader.className = 'flex justify-center items-center h-7 mb-1 shrink-0';
+        dateHeader.innerHTML = dayHeaderHtml;
+        cellDiv.appendChild(dateHeader);
+
+        // イベントリスト
+        const eventsContainer = document.createElement('div');
+        eventsContainer.className = 'flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar';
+
+        const dayEvents = events.filter(e => {
+          if (e.date !== cell.dateKey) return false;
+          if (searchQuery && !e.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+          return true;
+        });
+
+        dayEvents.forEach(ev => {
+          const c = colorClasses[ev.color] || colorClasses.blue;
+          const evEl = document.createElement('div');
+          evEl.className = `flex items-center gap-1.5 text-[11px] leading-tight px-1.5 py-0.5 rounded font-normal truncate shadow-xs transition-all cursor-pointer ${c.bg} ${c.text} ${ev.isCompleted ? 'opacity-50 line-through' : 'hover:brightness-95'}`;
+          evEl.title = ev.title;
+
+          let checkBtnHtml = '';
+          if (!ev.isHoliday) {
+            checkBtnHtml = `
+              <button class="w-3.5 h-3.5 rounded flex items-center justify-center border border-white/80 shrink-0 transition-colors ${ev.isCompleted ? 'bg-white text-gray-800' : 'hover:bg-white/20'}" onclick="event.stopPropagation(); toggleComplete('${ev.id}')">
+                ${ev.isCompleted ? '<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
+              </button>
+            `;
+          }
+
+          evEl.innerHTML = `${checkBtnHtml}<span class="truncate">${ev.title}</span>`;
+          evEl.onclick = (e) => {
+            e.stopPropagation();
+            if (!ev.isHoliday) openEditModal(ev);
+          };
+          eventsContainer.appendChild(evEl);
+        });
+
+        cellDiv.appendChild(eventsContainer);
+        mainGrid.appendChild(cellDiv);
+      });
+
+      renderMiniCalendar();
+      updateProgress();
+    }
+
+    function renderMiniCalendar() {
+      const miniGrid = document.getElementById('miniCalendarGrid');
+      miniGrid.innerHTML = '';
+
+      const firstDay = new Date(currentYear, currentMonth - 1, 1);
+      const startDay = firstDay.getDay();
+      const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+      const daysInPrev = new Date(currentYear, currentMonth - 1, 0).getDate();
+
+      const days = [];
+      for (let i = startDay - 1; i >= 0; i--) {
+        const d = daysInPrev - i;
+        const prevDate = new Date(currentYear, currentMonth - 2, d);
+        days.push({
+          num: d,
+          dateKey: formatDateKey(prevDate.getFullYear(), prevDate.getMonth() + 1, d),
+          isCurrent: false
+        });
+      }
+      for (let d = 1; d <= daysInMonth; d++) {
+        days.push({
+          num: d,
+          dateKey: formatDateKey(currentYear, currentMonth, d),
+          isCurrent: true
+        });
+      }
+      const remaining = 42 - days.length;
+      for (let d = 1; d <= remaining; d++) {
+        const nextDate = new Date(currentYear, currentMonth, d);
+        days.push({
+          num: d,
+          dateKey: formatDateKey(nextDate.getFullYear(), nextDate.getMonth() + 1, d),
+          isCurrent: false
+        });
+      }
+
+      days.forEach(d => {
+        const btn = document.createElement('button');
+        let style = 'text-gray-400 hover:bg-gray-100';
+        if (d.dateKey === todayKey) {
+          style = 'bg-[#1a73e8] text-white font-medium shadow-xs';
+        } else if (d.dateKey === selectedDate) {
+          style = 'bg-[#d2e3fc] text-[#174ea6] font-medium';
+        } else if (d.isCurrent) {
+          style = 'text-gray-800 hover:bg-gray-200';
+        }
+
+        btn.className = `h-7 w-7 mx-auto my-0.5 rounded-full flex items-center justify-center transition-colors text-[11px] ${style}`;
+        btn.textContent = d.num;
+        btn.onclick = () => {
+          selectedDate = d.dateKey;
+          const [y, m] = d.dateKey.split('-').map(Number);
+          if (y !== currentYear || m !== currentMonth) {
+            currentYear = y;
+            currentMonth = m;
+          }
+          renderMainCalendar();
+        };
+        miniGrid.appendChild(btn);
+      });
+    }
+
+    function toggleComplete(id) {
+      events = events.map(e => e.id === id ? { ...e, isCompleted: !e.isCompleted } : e);
+      saveEvents();
+      renderMainCalendar();
+    }
+
+    function updateProgress() {
+      const nonHolidays = events.filter(e => !e.isHoliday);
+      const completed = nonHolidays.filter(e => e.isCompleted).length;
+      const total = nonHolidays.length;
+      document.getElementById('taskProgressText').textContent = `${completed} / ${total} 完了`;
+      document.getElementById('taskProgressBar').style.width = `${total > 0 ? (completed / total) * 100 : 0}%`;
+    }
+
+    // モーダル操作
+    const modal = document.getElementById('eventModal');
+    function openModal(dateStr = selectedDate) {
+      document.getElementById('eventId').value = '';
+      document.getElementById('eventTitleInput').value = '';
+      document.getElementById('eventDateInput').value = dateStr;
+      document.getElementById('modalTitle').textContent = '予定・チェック項目の作成';
+      document.getElementById('deleteEventBtn').classList.add('hidden');
+      document.getElementById('deleteEventBtn').classList.remove('flex');
+      selectColor('blue');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function openEditModal(ev) {
+      document.getElementById('eventId').value = ev.id;
+      document.getElementById('eventTitleInput').value = ev.title;
+      document.getElementById('eventDateInput').value = ev.date;
+      document.getElementById('modalTitle').textContent = '予定・チェック項目の編集';
+      document.getElementById('deleteEventBtn').classList.remove('hidden');
+      document.getElementById('deleteEventBtn').classList.add('flex');
+      selectColor(ev.color || 'blue');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function selectColor(color) {
+      currentColor = color;
+      document.querySelectorAll('.color-btn').forEach(btn => {
+        if (btn.dataset.color === color) {
+          btn.className = `color-btn w-7 h-7 rounded-full ${colorClasses[color].bg} ring-2 ring-offset-2 ring-blue-500 scale-125 transition-all`;
+        } else {
+          btn.className = `color-btn w-7 h-7 rounded-full ${colorClasses[btn.dataset.color].bg} transition-all hover:scale-110`;
+        }
+      });
+    }
+
+    document.querySelectorAll('.color-btn').forEach(btn => {
+      btn.onclick = () => selectColor(btn.dataset.color);
+    });
+
+    document.getElementById('eventForm').onsubmit = (e) => {
+      e.preventDefault();
+      const id = document.getElementById('eventId').value;
+      const title = document.getElementById('eventTitleInput').value.trim();
+      const date = document.getElementById('eventDateInput').value;
+
+      if (!title) return;
+
+      if (id) {
+        events = events.map(ev => ev.id === id ? { ...ev, title, date, color: currentColor } : ev);
       } else {
-        const textClass = day.isCurrentMonth ? 'text-gray-800' : 'text-gray-400 font-light';
-        dateHeader.innerHTML = `<span class="text-xs ${textClass}">${day.display}</span>`;
+        events.push({
+          id: `ev-${Date.now()}`,
+          title,
+          date,
+          color: currentColor,
+          isCompleted: false,
+          isHoliday: false
+        });
       }
-      cell.appendChild(dateHeader);
+      saveEvents();
+      closeModal();
+      renderMainCalendar();
+    };
 
-      if (day.event) {
-        const eventEl = document.createElement('div');
-        eventEl.className = 'mt-0.5 px-0.5';
-        eventEl.innerHTML = `<div class="bg-[#137333] hover:bg-[#0d5926] text-white text-[11px] leading-tight px-1.5 py-0.5 rounded font-normal truncate shadow-xs transition-colors cursor-pointer">${day.event}</div>`;
-        cell.appendChild(eventEl);
+    document.getElementById('deleteEventBtn').onclick = () => {
+      const id = document.getElementById('eventId').value;
+      if (id) {
+        events = events.filter(e => e.id !== id);
+        saveEvents();
+        closeModal();
+        renderMainCalendar();
       }
+    };
 
-      mainGrid.appendChild(cell);
-    });
+    // ナビゲーションイベント
+    document.getElementById('prevMonthBtn').onclick = () => {
+      currentMonth--;
+      if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+      renderMainCalendar();
+    };
+    document.getElementById('nextMonthBtn').onclick = () => {
+      currentMonth++;
+      if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+      renderMainCalendar();
+    };
+    document.getElementById('miniPrevBtn').onclick = () => document.getElementById('prevMonthBtn').click();
+    document.getElementById('miniNextBtn').onclick = () => document.getElementById('nextMonthBtn').click();
 
-    // ミニカレンダー描画
-    const miniGrid = document.getElementById('miniCalendarGrid');
-    miniDays.forEach((d) => {
-      const btn = document.createElement('button');
-      let styleClass = 'text-gray-400 hover:bg-gray-100';
-      if (d.isToday) {
-        styleClass = 'bg-[#1a73e8] text-white font-medium shadow-xs';
-      } else if (d.isSelected) {
-        styleClass = 'bg-[#d2e3fc] text-[#174ea6] font-medium';
-      } else if (d.isCurrent) {
-        styleClass = 'text-gray-800 hover:bg-gray-200';
-      }
+    document.getElementById('todayBtn').onclick = () => {
+      currentYear = 2026;
+      currentMonth = 11;
+      selectedDate = '2026-11-11';
+      renderMainCalendar();
+    };
 
-      btn.className = `h-7 w-7 mx-auto my-0.5 rounded-full flex items-center justify-center transition-colors text-[11px] ${styleClass}`;
-      btn.textContent = d.num;
-      miniGrid.appendChild(btn);
-    });
-
-    // サイドバー開閉ロジック
+    // サイドバー開閉
     const sidebar = document.getElementById('sidebar');
     const openBtn = document.getElementById('openSidebarBtn');
     const closeBtn = document.getElementById('closeSidebarBtn');
 
-    openBtn.addEventListener('click', () => {
+    openBtn.onclick = () => {
       sidebar.classList.remove('hidden');
       sidebar.classList.add('flex');
       openBtn.classList.add('hidden');
-    });
-
-    closeBtn.addEventListener('click', () => {
+    };
+    closeBtn.onclick = () => {
       sidebar.classList.add('hidden');
       sidebar.classList.remove('flex');
       openBtn.classList.remove('hidden');
-    });
+    };
 
-    // アイコン初期化
+    document.getElementById('createEventBtn').onclick = () => openModal();
+    document.getElementById('modalCloseBtn').onclick = closeModal;
+    document.getElementById('modalCancelBtn').onclick = closeModal;
+
+    // 検索機能
+    const searchContainer = document.getElementById('searchContainer');
+    const searchInput = document.getElementById('searchInput');
+    const openSearchBtn = document.getElementById('openSearchBtn');
+    const closeSearchBtn = document.getElementById('closeSearchBtn');
+
+    openSearchBtn.onclick = () => {
+      searchContainer.classList.remove('hidden');
+      searchContainer.classList.add('flex');
+      openSearchBtn.classList.add('hidden');
+      searchInput.focus();
+    };
+    closeSearchBtn.onclick = () => {
+      searchContainer.classList.add('hidden');
+      searchContainer.classList.remove('flex');
+      openSearchBtn.classList.remove('hidden');
+      searchQuery = '';
+      searchInput.value = '';
+      renderMainCalendar();
+    };
+    searchInput.oninput = (e) => {
+      searchQuery = e.target.value;
+      renderMainCalendar();
+    };
+
+    document.getElementById('resetDataBtn').onclick = () => {
+      if (confirm('予定データを初期状態（2026年11月）にリセットしますか？')) {
+        events = [...DEFAULT_EVENTS];
+        saveEvents();
+        renderMainCalendar();
+      }
+    };
+
+    // 初回レンダリング
+    renderMainCalendar();
     lucide.createIcons();
   </script>
 </body>
