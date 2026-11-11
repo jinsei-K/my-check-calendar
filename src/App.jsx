@@ -12,8 +12,7 @@ import {
   Check,
   Trash2,
   Calendar as CalendarIcon,
-  CheckSquare,
-  Clock
+  CheckSquare
 } from 'lucide-react';
 
 // カラーパレット定義
@@ -25,16 +24,15 @@ const COLOR_OPTIONS = [
   { id: 'purple', name: 'パープル', bg: 'bg-[#a142f4]', border: 'border-[#a142f4]', text: 'text-white' },
 ];
 
-// 初期イベント（画像再現用 2026年11月データ含む）
+// 初期イベント
 const DEFAULT_EVENTS = [
   { id: 'ev-1', title: '文化の日', date: '2026-11-03', color: 'green', isCompleted: false, isHoliday: true },
   { id: 'ev-2', title: '七五三', date: '2026-11-15', color: 'green', isCompleted: false, isHoliday: true },
   { id: 'ev-3', title: '勤労感謝の日', date: '2026-11-23', color: 'green', isCompleted: false, isHoliday: true },
 ];
 
-// 日本の祝日データ（2025〜2027年 主要祝日）
+// 日本の祝日データ
 const JAPANESE_HOLIDAYS = {
-  // 2026年
   '2026-01-01': '元日',
   '2026-01-12': '成人の日',
   '2026-02-11': '建国記念の日',
@@ -56,29 +54,75 @@ const JAPANESE_HOLIDAYS = {
   '2026-11-23': '勤労感謝の日',
 };
 
-// ヘルパー: YYYY-MM-DD 形式の文字列生成
 function formatDateKey(year, month, day) {
   const m = String(month).padStart(2, '0');
   const d = String(day).padStart(2, '0');
   return `${year}-${m}-${d}`;
 }
 
+// 任意年月のカレンダーグリッド（42セル固定）を生成するヘルパー関数
+function generateMonthDays(year, month, selectedDate, todayKey) {
+  const firstDay = new Date(year, month - 1, 1);
+  const startDayOfWeek = firstDay.getDay(); // 0(日) - 6(土)
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const daysInPrev = new Date(year, month - 1, 0).getDate();
+
+  const days = [];
+  // 前月
+  for (let i = startDayOfWeek - 1; i >= 0; i--) {
+    const d = daysInPrev - i;
+    const prevDate = new Date(year, month - 2, d);
+    const dateKey = formatDateKey(prevDate.getFullYear(), prevDate.getMonth() + 1, d);
+    days.push({
+      num: d,
+      dateKey,
+      isCurrent: false,
+      isSelected: dateKey === selectedDate,
+      isToday: dateKey === todayKey,
+    });
+  }
+  // 当月
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateKey = formatDateKey(year, month, d);
+    days.push({
+      num: d,
+      dateKey,
+      isCurrent: true,
+      isSelected: dateKey === selectedDate,
+      isToday: dateKey === todayKey,
+    });
+  }
+  // 翌月 (42マス固定)
+  const remaining = 42 - days.length;
+  for (let d = 1; d <= remaining; d++) {
+    const nextDate = new Date(year, month, d);
+    const dateKey = formatDateKey(nextDate.getFullYear(), nextDate.getMonth() + 1, d);
+    days.push({
+      num: d,
+      dateKey,
+      isCurrent: false,
+      isSelected: dateKey === selectedDate,
+      isToday: dateKey === todayKey,
+    });
+  }
+  return days;
+}
+
 export default function App() {
-  // 現在表示中の年月（初期値は画像に合わせた2026年11月）
-  const [currentDate, setCurrentDate] = useState(() => new Date(2026, 10, 1)); // 10 = 11月
-  // 選択中の日付
+  // 現在表示中の基準日（初期値: 2026年11月）
+  const [currentDate, setCurrentDate] = useState(() => new Date(2026, 10, 1));
   const [selectedDate, setSelectedDate] = useState('2026-11-01');
-  // サイドバーの開閉状態
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  // 表示モード ('month' | 'check-list')
+
+  // 表示モード: 'month' (月表示) | 'year' (年表示) | 'check-list' (チェック一覧)
   const [viewMode, setViewMode] = useState('month');
   const [isViewDropdownOpen, setIsViewDropdownOpen] = useState(false);
 
-  // 検索クエリ
+  // 検索
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // イベント・タスクリスト（LocalStorage永続化）
+  // イベント
   const [events, setEvents] = useState(() => {
     try {
       const saved = localStorage.getItem('check_calendar_events');
@@ -88,7 +132,6 @@ export default function App() {
     }
   });
 
-  // LocalStorageに保存
   useEffect(() => {
     try {
       localStorage.setItem('check_calendar_events', JSON.stringify(events));
@@ -97,8 +140,8 @@ export default function App() {
     }
   }, [events]);
 
-  // モーダル管理
-  const [modalMode, setModalMode] = useState(null); // 'create' | 'edit' | null
+  // モーダル
+  const [modalMode, setModalMode] = useState(null);
   const [activeEvent, setActiveEvent] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -107,36 +150,40 @@ export default function App() {
     isTask: true,
   });
 
-  // 今日の実際の日付（2026-11-11 をデフォルトのTodayとするが、リアルTodayにも対応）
   const todayKey = '2026-11-11';
-
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1;
 
-  // カレンダー送り処理
-  const handlePrevMonth = () => {
-    setCurrentDate(new Date(currentYear, currentMonth - 2, 1));
+  // ナビゲーション処理
+  const handlePrev = () => {
+    if (viewMode === 'year') {
+      setCurrentDate(new Date(currentYear - 1, currentMonth - 1, 1));
+    } else {
+      setCurrentDate(new Date(currentYear, currentMonth - 2, 1));
+    }
   };
 
-  const handleNextMonth = () => {
-    setCurrentDate(new Date(currentYear, currentMonth, 1));
+  const handleNext = () => {
+    if (viewMode === 'year') {
+      setCurrentDate(new Date(currentYear + 1, currentMonth - 1, 1));
+    } else {
+      setCurrentDate(new Date(currentYear, currentMonth, 1));
+    }
   };
 
   const handleGoToday = () => {
-    setCurrentDate(new Date(2026, 10, 1)); // 2026年11月へ戻る
+    setCurrentDate(new Date(2026, 10, 1));
     setSelectedDate('2026-11-11');
   };
 
-  // メインカレンダーの日付グリッド生成 (日曜始まり・7列×5〜6行)
+  // メイン月カレンダーのグリッド
   const calendarGrid = useMemo(() => {
     const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1);
-    const startDayOfWeek = firstDayOfMonth.getDay(); // 0(日) - 6(土)
+    const startDayOfWeek = firstDayOfMonth.getDay();
     const daysInCurrentMonth = new Date(currentYear, currentMonth, 0).getDate();
     const daysInPrevMonth = new Date(currentYear, currentMonth - 1, 0).getDate();
 
     const days = [];
-
-    // 前月のはみ出し分
     for (let i = startDayOfWeek - 1; i >= 0; i--) {
       const d = daysInPrevMonth - i;
       const prevDate = new Date(currentYear, currentMonth - 2, d);
@@ -152,7 +199,6 @@ export default function App() {
       });
     }
 
-    // 当月の日付
     for (let d = 1; d <= daysInCurrentMonth; d++) {
       const dateKey = formatDateKey(currentYear, currentMonth, d);
       days.push({
@@ -166,7 +212,6 @@ export default function App() {
       });
     }
 
-    // 翌月のはみ出し分 (35マスまたは42マスに揃える)
     const totalSlots = days.length <= 35 ? 35 : 42;
     const remainingSlots = totalSlots - days.length;
     for (let d = 1; d <= remainingSlots; d++) {
@@ -186,75 +231,40 @@ export default function App() {
     return days;
   }, [currentYear, currentMonth, todayKey]);
 
-  // ミニカレンダーの日付グリッド生成 (日曜始まり)
+  // サイドバー用ミニカレンダー
   const miniCalendarGrid = useMemo(() => {
-    const firstDay = new Date(currentYear, currentMonth - 1, 1);
-    const startDayOfWeek = firstDay.getDay();
-    const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
-    const daysInPrev = new Date(currentYear, currentMonth - 1, 0).getDate();
-
-    const days = [];
-    // 前月
-    for (let i = startDayOfWeek - 1; i >= 0; i--) {
-      const d = daysInPrev - i;
-      const prevDate = new Date(currentYear, currentMonth - 2, d);
-      const dateKey = formatDateKey(prevDate.getFullYear(), prevDate.getMonth() + 1, d);
-      days.push({
-        num: d,
-        dateKey,
-        isCurrent: false,
-        isSelected: dateKey === selectedDate,
-        isToday: dateKey === todayKey,
-      });
-    }
-    // 当月
-    for (let d = 1; d <= daysInMonth; d++) {
-      const dateKey = formatDateKey(currentYear, currentMonth, d);
-      days.push({
-        num: d,
-        dateKey,
-        isCurrent: true,
-        isSelected: dateKey === selectedDate,
-        isToday: dateKey === todayKey,
-      });
-    }
-    // 翌月 (42マス固定)
-    const remaining = 42 - days.length;
-    for (let d = 1; d <= remaining; d++) {
-      const nextDate = new Date(currentYear, currentMonth, d);
-      const dateKey = formatDateKey(nextDate.getFullYear(), nextDate.getMonth() + 1, d);
-      days.push({
-        num: d,
-        dateKey,
-        isCurrent: false,
-        isSelected: dateKey === selectedDate,
-        isToday: dateKey === todayKey,
-      });
-    }
-    return days;
+    return generateMonthDays(currentYear, currentMonth, selectedDate, todayKey);
   }, [currentYear, currentMonth, selectedDate, todayKey]);
 
-  // 日付ごとのイベント取得マップ
+  // 年表示（Year View）用: 1月〜12月の12か月分のデータ
+  const yearMonthsData = useMemo(() => {
+    const months = [];
+    for (let m = 1; m <= 12; m++) {
+      months.push({
+        monthNum: m,
+        title: `${m}月`,
+        days: generateMonthDays(currentYear, m, selectedDate, todayKey),
+      });
+    }
+    return months;
+  }, [currentYear, selectedDate, todayKey]);
+
+  // 日付ごとのイベント
   const eventsByDate = useMemo(() => {
     const map = {};
     events.forEach((ev) => {
-      // 検索フィルター
       if (searchQuery.trim() && !ev.title.toLowerCase().includes(searchQuery.toLowerCase())) {
         return;
       }
-      if (!map[ev.date]) {
-        map[ev.date] = [];
-      }
+      if (!map[ev.date]) map[ev.date] = [];
       map[ev.date].push(ev);
     });
 
-    // 祝日データもマージ
     Object.entries(JAPANESE_HOLIDAYS).forEach(([dateStr, name]) => {
       if (searchQuery.trim() && !name.toLowerCase().includes(searchQuery.toLowerCase())) {
         return;
       }
       if (!map[dateStr]) map[dateStr] = [];
-      // 既存の祝日と重複していないか確認
       if (!map[dateStr].some(e => e.title === name)) {
         map[dateStr].unshift({
           id: `holiday-${dateStr}`,
@@ -270,7 +280,6 @@ export default function App() {
     return map;
   }, [events, searchQuery]);
 
-  // イベント追加モーダルを開く
   const handleOpenCreateModal = (targetDate = selectedDate) => {
     setFormData({
       title: '',
@@ -281,10 +290,9 @@ export default function App() {
     setModalMode('create');
   };
 
-  // イベント編集モーダルを開く
   const handleOpenEditModal = (ev, e) => {
     e.stopPropagation();
-    if (ev.isHoliday) return; // 祝日は編集不可
+    if (ev.isHoliday) return;
     setActiveEvent(ev);
     setFormData({
       title: ev.title,
@@ -295,7 +303,6 @@ export default function App() {
     setModalMode('edit');
   };
 
-  // 保存処理 (新規 or 更新)
   const handleSaveEvent = (e) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
@@ -328,7 +335,6 @@ export default function App() {
     setActiveEvent(null);
   };
 
-  // 削除処理
   const handleDeleteEvent = () => {
     if (!activeEvent) return;
     setEvents(prev => prev.filter(ev => ev.id !== activeEvent.id));
@@ -336,7 +342,6 @@ export default function App() {
     setActiveEvent(null);
   };
 
-  // チェックボックス切り替え (完了 / 未完了)
   const handleToggleComplete = (eventId, e) => {
     e.stopPropagation();
     setEvents(prev => prev.map(ev => {
@@ -348,11 +353,10 @@ export default function App() {
   };
 
   const weekDayNames = ['日', '月', '火', '水', '木', '金', '土'];
+  const taskEvents = useMemo(() => events.filter(e => !e.isHoliday), [events]);
 
-  // チェックリスト（ToDo）ビュー用イベント一覧
-  const taskEvents = useMemo(() => {
-    return events.filter(e => !e.isHoliday);
-  }, [events]);
+  // 現在のビュー名
+  const currentViewLabel = viewMode === 'year' ? '年' : viewMode === 'month' ? '月' : 'チェック一覧';
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#f8fafd] text-[#3c4043] font-sans antialiased">
@@ -360,7 +364,7 @@ export default function App() {
       <div className="bg-[#202124] text-[#e8eaed] text-xs px-3 py-1 flex items-center justify-between select-none shrink-0 border-b border-[#3c4043]/40">
         <span className="font-medium tracking-wide">空のWebサイト</span>
         <div className="flex items-center space-x-2 text-[11px] text-gray-400">
-          <span>チェックカレンダー v1.0</span>
+          <span>チェックカレンダー</span>
         </div>
       </div>
 
@@ -399,14 +403,14 @@ export default function App() {
                 </span>
                 <div className="flex items-center space-x-0.5 text-gray-600">
                   <button
-                    onClick={handlePrevMonth}
+                    onClick={() => setCurrentDate(new Date(currentYear, currentMonth - 2, 1))}
                     className="p-1 rounded-full hover:bg-gray-200 transition-colors"
                     title="前月"
                   >
                     <ChevronLeft size={16} />
                   </button>
                   <button
-                    onClick={handleNextMonth}
+                    onClick={() => setCurrentDate(new Date(currentYear, currentMonth, 1))}
                     className="p-1 rounded-full hover:bg-gray-200 transition-colors"
                     title="次月"
                   >
@@ -432,9 +436,8 @@ export default function App() {
                     onClick={() => {
                       setSelectedDate(d.dateKey);
                       const [y, m] = d.dateKey.split('-').map(Number);
-                      if (y !== currentYear || m !== currentMonth) {
-                        setCurrentDate(new Date(y, m - 1, 1));
-                      }
+                      setCurrentDate(new Date(y, m - 1, 1));
+                      if (viewMode === 'year') setViewMode('month');
                     }}
                     className={`h-7 w-7 mx-auto my-0.5 rounded-full flex items-center justify-center transition-colors text-[11px] ${
                       d.isToday
@@ -481,7 +484,6 @@ export default function App() {
           <header className="flex items-center justify-between h-14 px-2 select-none mb-1">
             {/* 左側: ハンバーガーメニュー / ナビゲーション */}
             <div className="flex items-center space-x-2 sm:space-x-3">
-              {/* サイドバーが閉じている時に表示される三本線メニューボタン */}
               {!isSidebarOpen && (
                 <button
                   onClick={() => setIsSidebarOpen(true)}
@@ -502,33 +504,32 @@ export default function App() {
                 今日
               </button>
 
-              {/* 前月・次月ボタン */}
+              {/* 前・次ボタン */}
               <div className="flex items-center space-x-1">
                 <button
-                  onClick={handlePrevMonth}
+                  onClick={handlePrev}
                   className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
-                  title="前月"
+                  title={viewMode === 'year' ? '前年' : '前月'}
                 >
                   <ChevronLeft size={18} />
                 </button>
                 <button
-                  onClick={handleNextMonth}
+                  onClick={handleNext}
                   className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
-                  title="次月"
+                  title={viewMode === 'year' ? '次年' : '次月'}
                 >
                   <ChevronRight size={18} />
                 </button>
               </div>
 
-              {/* 年月表示 */}
+              {/* 年月表示 (年表示なら「2026年」、月表示なら「2026年 11月」) */}
               <h1 className="text-xl font-medium text-gray-800 ml-2 tracking-tight">
-                {currentYear}年 {currentMonth}月
+                {viewMode === 'year' ? `${currentYear}年` : `${currentYear}年 ${currentMonth}月`}
               </h1>
             </div>
 
             {/* 右側: 検索・ヘルプ・設定・表示切替 */}
             <div className="flex items-center space-x-1 sm:space-x-2">
-              {/* 検索入力欄（トグル式） */}
               {isSearchOpen ? (
                 <div className="flex items-center bg-gray-100 rounded-full px-3 py-1 border border-gray-300 animate-in fade-in duration-150">
                   <Search size={16} className="text-gray-500 mr-2" />
@@ -561,7 +562,7 @@ export default function App() {
               )}
 
               <button
-                onClick={() => alert('【チェックカレンダーの使い方】\n・日付マスをクリックして新しい予定やチェックリストを追加できます。\n・イベントの左のチェックをクリックすると「完了・未完了」が切り替わります。\n・上部の「月 ▾」ボタンからToDoチェック一覧ビューにも切り替えられます。')}
+                onClick={() => alert('【チェックカレンダーの使い方】\n・右上の「月 ▾」ボタンで「年」「月」「チェック一覧」の切り替えができます。\n・年表示では12ヶ月を一覧でき、月や日付をクリックすると月表示にジャンプします。\n・日付マスをクリックして新しい予定やタスクを追加できます。')}
                 className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
                 title="ヘルプ"
               >
@@ -576,18 +577,18 @@ export default function App() {
                   }
                 }}
                 className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
-                title="データ初期化"
+                title="設定・データ初期化"
               >
                 <Settings size={20} />
               </button>
 
-              {/* ビュー切替「月 ▾」ドロップダウン */}
+              {/* ビュー切替「月 ▾」/「年 ▾」ドロップダウンボタン */}
               <div className="relative">
                 <button
                   onClick={() => setIsViewDropdownOpen(prev => !prev)}
                   className="flex items-center space-x-1.5 px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors ml-1"
                 >
-                  <span>{viewMode === 'month' ? '月' : 'チェック一覧'}</span>
+                  <span>{currentViewLabel}</span>
                   <ChevronDown size={14} className="text-gray-500" />
                 </button>
 
@@ -600,8 +601,18 @@ export default function App() {
                       }}
                       className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 ${viewMode === 'month' ? 'font-semibold text-[#1a73e8]' : 'text-gray-700'}`}
                     >
-                      <span>月表示</span>
+                      <span>月</span>
                       {viewMode === 'month' && <Check size={14} />}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setViewMode('year');
+                        setIsViewDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 ${viewMode === 'year' ? 'font-semibold text-[#1a73e8]' : 'text-gray-700'}`}
+                    >
+                      <span>年</span>
+                      {viewMode === 'year' && <Check size={14} />}
                     </button>
                     <button
                       onClick={() => {
@@ -619,10 +630,10 @@ export default function App() {
             </div>
           </header>
 
-          {/* ビュー表示: 月カレンダービュー */}
+          {/* ビュー切り替えレンダリング */}
           {viewMode === 'month' ? (
+            /* =================== 月表示 (Month View) =================== */
             <main className="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
-              {/* 曜日ヘッダー */}
               <div className="grid grid-cols-7 border-b border-gray-200 text-center py-2 text-xs font-medium text-gray-500 bg-white">
                 {weekDayNames.map((day, idx) => (
                   <div key={idx} className="flex justify-center">
@@ -633,7 +644,6 @@ export default function App() {
                 ))}
               </div>
 
-              {/* カレンダーグリッド */}
               <div className={`flex-1 grid grid-cols-7 ${calendarGrid.length > 35 ? 'grid-rows-6' : 'grid-rows-5'} bg-white`}>
                 {calendarGrid.map((cell, idx) => {
                   const isColRightBorder = (idx + 1) % 7 !== 0;
@@ -654,7 +664,6 @@ export default function App() {
                         selectedDate === cell.id ? 'bg-blue-50/20' : ''
                       }`}
                     >
-                      {/* 日付表示（上部中央） */}
                       <div className="flex justify-center items-center h-7 mb-1 shrink-0">
                         {cell.isToday ? (
                           <div className="w-6 h-6 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-xs font-medium shadow-xs">
@@ -673,7 +682,6 @@ export default function App() {
                         )}
                       </div>
 
-                      {/* イベントタグ・タスク一覧 */}
                       <div className="flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar">
                         {dayEvents.map((ev) => {
                           const colorObj = COLOR_OPTIONS.find(c => c.id === ev.color) || COLOR_OPTIONS[0];
@@ -687,7 +695,6 @@ export default function App() {
                               } ${ev.isCompleted ? 'opacity-50 line-through' : 'hover:brightness-95'}`}
                               title={ev.title}
                             >
-                              {/* チェックボックス（祝日以外） */}
                               {!ev.isHoliday && (
                                 <button
                                   type="button"
@@ -706,7 +713,6 @@ export default function App() {
                         })}
                       </div>
 
-                      {/* ホバー時に追加アイコンを右下に小さく表示 */}
                       <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="w-5 h-5 rounded-full bg-blue-100 text-[#1a73e8] flex items-center justify-center">
                           <Plus size={12} strokeWidth={2.5} />
@@ -717,8 +723,66 @@ export default function App() {
                 })}
               </div>
             </main>
+          ) : viewMode === 'year' ? (
+            /* =================== 年表示 (Year View - 添付画像を完全再現) =================== */
+            <main className="flex-1 bg-white border border-gray-200 rounded-2xl overflow-y-auto p-4 sm:p-6 shadow-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 max-w-7xl mx-auto">
+                {yearMonthsData.map((m) => (
+                  <div key={m.monthNum} className="flex flex-col">
+                    {/* 月見出し (クリックでその月の月表示に切り替え) */}
+                    <div className="mb-2">
+                      <button
+                        onClick={() => {
+                          setCurrentDate(new Date(currentYear, m.monthNum - 1, 1));
+                          setViewMode('month');
+                        }}
+                        className="text-sm font-semibold text-gray-800 hover:text-[#1a73e8] transition-colors"
+                      >
+                        {m.title}
+                      </button>
+                    </div>
+
+                    {/* 曜日ヘッダー */}
+                    <div className="grid grid-cols-7 text-center mb-1 text-[11px] font-medium text-gray-500">
+                      {weekDayNames.map((day, idx) => (
+                        <div key={idx} className="py-0.5">
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 6行×7列の日付グリッド */}
+                    <div className="grid grid-cols-7 text-center text-xs">
+                      {m.days.map((d, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setSelectedDate(d.dateKey);
+                            const [y, mon] = d.dateKey.split('-').map(Number);
+                            setCurrentDate(new Date(y, mon - 1, 1));
+                            setViewMode('month');
+                          }}
+                          className={`h-6 w-6 mx-auto my-0.5 rounded-full flex items-center justify-center transition-all text-[11px] ${
+                            d.isToday
+                              ? 'bg-[#1a73e8] text-white font-medium shadow-xs'
+                              : d.isSelected
+                              ? 'bg-[#d2e3fc] text-[#174ea6] font-medium'
+                              : d.isCurrent
+                              ? 'text-gray-800 hover:bg-gray-100'
+                              : 'text-gray-300 hover:bg-gray-50'
+                          }`}
+                          title={d.dateKey}
+                        >
+                          {d.num}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </main>
           ) : (
-            /* ビュー表示: チェック一覧（ToDo）ビュー */
+            /* =================== チェック一覧（ToDo）ビュー =================== */
             <main className="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs p-6">
               <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4">
                 <div>
@@ -739,7 +803,6 @@ export default function App() {
                   <div className="h-48 flex flex-col items-center justify-center text-gray-400">
                     <CheckSquare size={36} className="mb-2 stroke-1" />
                     <p className="text-sm">登録されているタスクはありません</p>
-                    <p className="text-xs text-gray-400 mt-1">「作成」ボタンから新しいチェック項目を追加してみましょう</p>
                   </div>
                 ) : (
                   taskEvents.map((t) => {
@@ -807,14 +870,13 @@ export default function App() {
         </div>
       </div>
 
-      {/* 予定・タスク作成/編集モーダル */}
+      {/* モーダル */}
       {modalMode && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
           <div
             className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 transform transition-all"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* モーダルヘッダー */}
             <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
                 <CheckSquare size={18} className="text-[#1a73e8]" />
@@ -828,7 +890,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* モーダルフォーム */}
             <form onSubmit={handleSaveEvent} className="p-6 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">タイトル</label>
@@ -872,7 +933,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* フッターボタン */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                 {modalMode === 'edit' ? (
                   <button

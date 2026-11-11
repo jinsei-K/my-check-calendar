@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>日課チェック！！ - チェックカレンダー</title>
+  <title>空のWebサイト - チェックカレンダー</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
@@ -29,7 +29,7 @@
   <!-- ブラウザ風タイトルバー（画像の「空のWebサイト」） -->
   <div class="bg-[#202124] text-[#e8eaed] text-xs px-3 py-1 flex items-center justify-between select-none shrink-0 border-b border-[#3c4043]/40">
     <span class="font-medium tracking-wide">空のWebサイト</span>
-    <span class="text-[11px] text-gray-400">チェックカレンダー v1.0</span>
+    <span class="text-[11px] text-gray-400">チェックカレンダー</span>
   </div>
 
   <div class="flex flex-1 overflow-hidden relative">
@@ -95,13 +95,12 @@
       </div>
     </aside>
 
-    <!-- メインカレンダー領域 -->
+    <!-- メイン領域 -->
     <div class="flex-1 flex flex-col h-full overflow-hidden p-3 pl-3">
       <!-- 上部ヘッダー -->
       <header class="flex items-center justify-between h-14 px-2 select-none mb-1">
         <!-- 左側: ハンバーガーメニュー / ナビゲーション -->
         <div class="flex items-center space-x-2 sm:space-x-3">
-          <!-- サイドバーが閉じている時に表示される三本線メニューボタン -->
           <button id="openSidebarBtn" class="flex flex-col items-center justify-center w-12 h-12 rounded-full hover:bg-gray-200 transition-colors text-gray-700 mr-1" title="メニューを開く">
             <i data-lucide="menu" class="w-5 h-5 stroke-[2]"></i>
             <span class="text-[10px] leading-tight font-normal text-gray-700 -mt-0.5">メニュー</span>
@@ -112,18 +111,18 @@
             今日
           </button>
 
-          <!-- 前月・次月ボタン -->
+          <!-- 前・次ボタン -->
           <div class="flex items-center space-x-1">
-            <button id="prevMonthBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="前月">
+            <button id="prevBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors">
               <i data-lucide="chevron-left" class="w-4 h-4"></i>
             </button>
-            <button id="nextMonthBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="次月">
+            <button id="nextBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors">
               <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </button>
           </div>
 
           <!-- 年月表示 -->
-          <h1 id="mainMonthTitle" class="text-xl font-medium text-gray-800 ml-2 tracking-tight">
+          <h1 id="headerTitle" class="text-xl font-medium text-gray-800 ml-2 tracking-tight">
             2026年 11月
           </h1>
         </div>
@@ -142,7 +141,7 @@
             <i data-lucide="search" class="w-5 h-5"></i>
           </button>
 
-          <button onclick="alert('【チェックカレンダーの使い方】\n・カレンダーの日付マスをクリックして新しい予定やタスクを追加できます。\n・タスクの左のチェックボックスをクリックすると完了/未完了が切り替わります。\n・前月・次月ボタンや「今日」ボタンで月送りできます。')" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="サポート">
+          <button onclick="alert('【チェックカレンダーの使い方】\n・右上の「月 ▾」ボタンから「年」「月」の切り替えができます。\n・年表示では12ヶ月を一覧でき、月や日付をクリックすると月表示にジャンプします。')" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="サポート">
             <i data-lucide="help-circle" class="w-5 h-5"></i>
           </button>
 
@@ -150,17 +149,27 @@
             <i data-lucide="settings" class="w-5 h-5"></i>
           </button>
 
-          <!-- ビュー切替「月 ▾」 -->
-          <button class="flex items-center space-x-1.5 px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors ml-1">
-            <span>月</span>
-            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500"></i>
-          </button>
+          <!-- ビュー切替「月 ▾」/「年 ▾」ドロップダウン -->
+          <div class="relative">
+            <button id="viewDropdownBtn" class="flex items-center space-x-1.5 px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors ml-1">
+              <span id="currentViewLabel">月</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500"></i>
+            </button>
+
+            <div id="viewDropdownMenu" class="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 hidden">
+              <button id="selectMonthView" class="w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 text-[#1a73e8] font-semibold">
+                <span>月</span>
+              </button>
+              <button id="selectYearView" class="w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 text-gray-700">
+                <span>年</span>
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
-      <!-- カレンダー本体（外枠コンテナ: 角丸・白背景・薄いボーダー） -->
-      <main class="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
-        <!-- 曜日ヘッダー -->
+      <!-- 月表示コンテナ (Month View) -->
+      <main id="monthViewContainer" class="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
         <div class="grid grid-cols-7 border-b border-gray-200 text-center py-2 text-xs font-medium text-gray-500 bg-white">
           <div class="flex justify-center"><span class="text-red-500">日</span></div>
           <div class="flex justify-center"><span>月</span></div>
@@ -170,9 +179,12 @@
           <div class="flex justify-center"><span>金</span></div>
           <div class="flex justify-center"><span class="text-blue-500">土</span></div>
         </div>
-
-        <!-- カレンダーグリッド -->
         <div id="mainCalendarGrid" class="flex-1 grid grid-cols-7 bg-white"></div>
+      </main>
+
+      <!-- 年表示コンテナ (Year View - 添付画像通りの12ヶ月レイアウト) -->
+      <main id="yearViewContainer" class="flex-1 bg-white border border-gray-200 rounded-2xl overflow-y-auto p-4 sm:p-6 shadow-xs hidden">
+        <div id="yearCalendarGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 max-w-7xl mx-auto"></div>
       </main>
     </div>
   </div>
@@ -224,7 +236,6 @@
   </div>
 
   <script>
-    // 初期データ
     const DEFAULT_EVENTS = [
       { id: 'ev-1', title: '文化の日', date: '2026-11-03', color: 'green', isCompleted: false, isHoliday: true },
       { id: 'ev-2', title: '七五三', date: '2026-11-15', color: 'green', isCompleted: false, isHoliday: true },
@@ -250,6 +261,9 @@
     const todayKey = '2026-11-11';
     let currentColor = 'blue';
     let searchQuery = '';
+    let currentView = 'month'; // 'month' | 'year'
+
+    const weekDayNames = ['日', '月', '火', '水', '木', '金', '土'];
 
     function formatDateKey(y, m, d) {
       return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -263,10 +277,69 @@
       purple: { bg: 'bg-[#a142f4]', text: 'text-white' },
     };
 
-    function renderMainCalendar() {
-      document.getElementById('mainMonthTitle').textContent = `${currentYear}年 ${currentMonth}月`;
-      document.getElementById('miniMonthTitle').textContent = `${currentYear}年 ${currentMonth}月`;
+    function generateMonthDays(year, month) {
+      const firstDay = new Date(year, month - 1, 1);
+      const startDay = firstDay.getDay();
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const daysInPrev = new Date(year, month - 1, 0).getDate();
 
+      const days = [];
+      for (let i = startDay - 1; i >= 0; i--) {
+        const d = daysInPrev - i;
+        const prevDate = new Date(year, month - 2, d);
+        days.push({
+          num: d,
+          dateKey: formatDateKey(prevDate.getFullYear(), prevDate.getMonth() + 1, d),
+          isCurrent: false,
+          dayNum: d
+        });
+      }
+      for (let d = 1; d <= daysInMonth; d++) {
+        days.push({
+          num: d,
+          dateKey: formatDateKey(year, month, d),
+          isCurrent: true,
+          dayNum: d
+        });
+      }
+      const remaining = 42 - days.length;
+      for (let d = 1; d <= remaining; d++) {
+        const nextDate = new Date(year, month, d);
+        days.push({
+          num: d,
+          dateKey: formatDateKey(nextDate.getFullYear(), nextDate.getMonth() + 1, d),
+          isCurrent: false,
+          dayNum: d
+        });
+      }
+      return days;
+    }
+
+    function renderView() {
+      // ヘッダータイトル更新
+      if (currentView === 'year') {
+        document.getElementById('headerTitle').textContent = `${currentYear}年`;
+        document.getElementById('currentViewLabel').textContent = '年';
+        document.getElementById('monthViewContainer').classList.add('hidden');
+        document.getElementById('monthViewContainer').classList.remove('flex');
+        document.getElementById('yearViewContainer').classList.remove('hidden');
+        renderYearCalendar();
+      } else {
+        document.getElementById('headerTitle').textContent = `${currentYear}年 ${currentMonth}月`;
+        document.getElementById('currentViewLabel').textContent = '月';
+        document.getElementById('yearViewContainer').classList.add('hidden');
+        document.getElementById('monthViewContainer').classList.remove('hidden');
+        document.getElementById('monthViewContainer').classList.add('flex');
+        renderMainCalendar();
+      }
+
+      renderMiniCalendar();
+      updateProgress();
+    }
+
+    // メイン月表示描画
+    function renderMainCalendar() {
+      document.getElementById('miniMonthTitle').textContent = `${currentYear}年 ${currentMonth}月`;
       const mainGrid = document.getElementById('mainCalendarGrid');
       mainGrid.innerHTML = '';
 
@@ -344,7 +417,6 @@
         dateHeader.innerHTML = dayHeaderHtml;
         cellDiv.appendChild(dateHeader);
 
-        // イベントリスト
         const eventsContainer = document.createElement('div');
         eventsContainer.className = 'flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar';
 
@@ -380,46 +452,80 @@
         cellDiv.appendChild(eventsContainer);
         mainGrid.appendChild(cellDiv);
       });
-
-      renderMiniCalendar();
-      updateProgress();
     }
+
+    // 年表示（Year View）描画 - 添付画像通りの4列×3行
+    function renderYearCalendar() {
+      const yearGrid = document.getElementById('yearCalendarGrid');
+      yearGrid.innerHTML = '';
+
+      for (let m = 1; m <= 12; m++) {
+        const monthCard = document.createElement('div');
+        monthCard.className = 'flex flex-col';
+
+        // 月タイトル
+        const header = document.createElement('div');
+        header.className = 'mb-2';
+        header.innerHTML = `
+          <button class="text-sm font-semibold text-gray-800 hover:text-[#1a73e8] transition-colors" onclick="switchToMonth(${m})">
+            ${m}月
+          </button>
+        `;
+        monthCard.appendChild(header);
+
+        // 曜日
+        const weekRow = document.createElement('div');
+        weekRow.className = 'grid grid-cols-7 text-center mb-1 text-[11px] font-medium text-gray-500';
+        weekDayNames.forEach(d => {
+          const col = document.createElement('div');
+          col.className = 'py-0.5';
+          col.textContent = d;
+          weekRow.appendChild(col);
+        });
+        monthCard.appendChild(weekRow);
+
+        // 日付グリッド (6行×7列)
+        const daysGrid = document.createElement('div');
+        daysGrid.className = 'grid grid-cols-7 text-center text-xs';
+
+        const monthDays = generateMonthDays(currentYear, m);
+        monthDays.forEach(d => {
+          const btn = document.createElement('button');
+          let style = 'text-gray-300 hover:bg-gray-50';
+          if (d.dateKey === todayKey) {
+            style = 'bg-[#1a73e8] text-white font-medium shadow-xs';
+          } else if (d.dateKey === selectedDate) {
+            style = 'bg-[#d2e3fc] text-[#174ea6] font-medium';
+          } else if (d.isCurrent) {
+            style = 'text-gray-800 hover:bg-gray-100';
+          }
+
+          btn.className = `h-6 w-6 mx-auto my-0.5 rounded-full flex items-center justify-center transition-all text-[11px] ${style}`;
+          btn.textContent = d.num;
+          btn.onclick = () => {
+            selectedDate = d.dateKey;
+            currentMonth = m;
+            currentView = 'month';
+            renderView();
+          };
+          daysGrid.appendChild(btn);
+        });
+
+        monthCard.appendChild(daysGrid);
+        yearGrid.appendChild(monthCard);
+      }
+    }
+
+    window.switchToMonth = function(m) {
+      currentMonth = m;
+      currentView = 'month';
+      renderView();
+    };
 
     function renderMiniCalendar() {
       const miniGrid = document.getElementById('miniCalendarGrid');
       miniGrid.innerHTML = '';
-
-      const firstDay = new Date(currentYear, currentMonth - 1, 1);
-      const startDay = firstDay.getDay();
-      const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
-      const daysInPrev = new Date(currentYear, currentMonth - 1, 0).getDate();
-
-      const days = [];
-      for (let i = startDay - 1; i >= 0; i--) {
-        const d = daysInPrev - i;
-        const prevDate = new Date(currentYear, currentMonth - 2, d);
-        days.push({
-          num: d,
-          dateKey: formatDateKey(prevDate.getFullYear(), prevDate.getMonth() + 1, d),
-          isCurrent: false
-        });
-      }
-      for (let d = 1; d <= daysInMonth; d++) {
-        days.push({
-          num: d,
-          dateKey: formatDateKey(currentYear, currentMonth, d),
-          isCurrent: true
-        });
-      }
-      const remaining = 42 - days.length;
-      for (let d = 1; d <= remaining; d++) {
-        const nextDate = new Date(currentYear, currentMonth, d);
-        days.push({
-          num: d,
-          dateKey: formatDateKey(nextDate.getFullYear(), nextDate.getMonth() + 1, d),
-          isCurrent: false
-        });
-      }
+      const days = generateMonthDays(currentYear, currentMonth);
 
       days.forEach(d => {
         const btn = document.createElement('button');
@@ -437,11 +543,10 @@
         btn.onclick = () => {
           selectedDate = d.dateKey;
           const [y, m] = d.dateKey.split('-').map(Number);
-          if (y !== currentYear || m !== currentMonth) {
-            currentYear = y;
-            currentMonth = m;
-          }
-          renderMainCalendar();
+          currentYear = y;
+          currentMonth = m;
+          currentView = 'month';
+          renderView();
         };
         miniGrid.appendChild(btn);
       });
@@ -450,7 +555,7 @@
     function toggleComplete(id) {
       events = events.map(e => e.id === id ? { ...e, isCompleted: !e.isCompleted } : e);
       saveEvents();
-      renderMainCalendar();
+      renderView();
     }
 
     function updateProgress() {
@@ -529,7 +634,7 @@
       }
       saveEvents();
       closeModal();
-      renderMainCalendar();
+      renderView();
     };
 
     document.getElementById('deleteEventBtn').onclick = () => {
@@ -538,29 +643,70 @@
         events = events.filter(e => e.id !== id);
         saveEvents();
         closeModal();
-        renderMainCalendar();
+        renderView();
       }
     };
 
-    // ナビゲーションイベント
-    document.getElementById('prevMonthBtn').onclick = () => {
+    // ナビゲーション
+    document.getElementById('prevBtn').onclick = () => {
+      if (currentView === 'year') {
+        currentYear--;
+      } else {
+        currentMonth--;
+        if (currentMonth < 1) { currentMonth = 12; currentYear--; }
+      }
+      renderView();
+    };
+
+    document.getElementById('nextBtn').onclick = () => {
+      if (currentView === 'year') {
+        currentYear++;
+      } else {
+        currentMonth++;
+        if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+      }
+      renderView();
+    };
+
+    document.getElementById('miniPrevBtn').onclick = () => {
       currentMonth--;
       if (currentMonth < 1) { currentMonth = 12; currentYear--; }
-      renderMainCalendar();
+      renderView();
     };
-    document.getElementById('nextMonthBtn').onclick = () => {
+    document.getElementById('miniNextBtn').onclick = () => {
       currentMonth++;
       if (currentMonth > 12) { currentMonth = 1; currentYear++; }
-      renderMainCalendar();
+      renderView();
     };
-    document.getElementById('miniPrevBtn').onclick = () => document.getElementById('prevMonthBtn').click();
-    document.getElementById('miniNextBtn').onclick = () => document.getElementById('nextMonthBtn').click();
 
     document.getElementById('todayBtn').onclick = () => {
       currentYear = 2026;
       currentMonth = 11;
       selectedDate = '2026-11-11';
-      renderMainCalendar();
+      renderView();
+    };
+
+    // ドロップダウン切り替え
+    const dropdownBtn = document.getElementById('viewDropdownBtn');
+    const dropdownMenu = document.getElementById('viewDropdownMenu');
+    dropdownBtn.onclick = (e) => {
+      e.stopPropagation();
+      dropdownMenu.classList.toggle('hidden');
+    };
+    document.addEventListener('click', () => {
+      dropdownMenu.classList.add('hidden');
+    });
+
+    document.getElementById('selectMonthView').onclick = () => {
+      currentView = 'month';
+      dropdownMenu.classList.add('hidden');
+      renderView();
+    };
+
+    document.getElementById('selectYearView').onclick = () => {
+      currentView = 'year';
+      dropdownMenu.classList.add('hidden');
+      renderView();
     };
 
     // サイドバー開閉
@@ -601,23 +747,23 @@
       openSearchBtn.classList.remove('hidden');
       searchQuery = '';
       searchInput.value = '';
-      renderMainCalendar();
+      renderView();
     };
     searchInput.oninput = (e) => {
       searchQuery = e.target.value;
-      renderMainCalendar();
+      renderView();
     };
 
     document.getElementById('resetDataBtn').onclick = () => {
       if (confirm('予定データを初期状態（2026年11月）にリセットしますか？')) {
         events = [...DEFAULT_EVENTS];
         saveEvents();
-        renderMainCalendar();
+        renderView();
       }
     };
 
-    // 初回レンダリング
-    renderMainCalendar();
+    // 初期化
+    renderView();
     lucide.createIcons();
   </script>
 </body>
