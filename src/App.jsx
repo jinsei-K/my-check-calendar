@@ -19,7 +19,8 @@ import {
   Filter,
   Target,
   Flame,
-  Award
+  Sun,
+  Moon
 } from 'lucide-react';
 
 const COLOR_OPTIONS = [
@@ -162,6 +163,27 @@ export default function App() {
   const [selectedDate, setSelectedDate] = useState('2026-11-01');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // テーマモード: 'light' | 'dark'
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('check_calendar_theme') || 'light';
+    } catch {
+      return 'light';
+    }
+  });
+
+  const isDark = theme === 'dark';
+
+  const toggleTheme = () => {
+    const nextTheme = isDark ? 'light' : 'dark';
+    setTheme(nextTheme);
+    try {
+      localStorage.setItem('check_calendar_theme', nextTheme);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const [viewMode, setViewMode] = useState('month');
   const [isViewDropdownOpen, setIsViewDropdownOpen] = useState(false);
 
@@ -222,7 +244,6 @@ export default function App() {
     }
   }, [userEvents]);
 
-  // モーダル管理
   const [modalMode, setModalMode] = useState(null);
   const [activeEvent, setActiveEvent] = useState(null);
   const [formData, setFormData] = useState({
@@ -243,7 +264,6 @@ export default function App() {
     return getJapaneseHolidays(currentYear);
   }, [currentYear]);
 
-  // 全イベント
   const allEvents = useMemo(() => {
     const list = [...userEvents];
 
@@ -266,8 +286,7 @@ export default function App() {
     return list;
   }, [userEvents, yearHolidays]);
 
-  // 日付ごとの達成度を計算するヘルパー（0.0〜1.0）
-  // 祝日以外のタスクを対象に、その日の完了タスク数 / 全タスク数を算出
+  // 達成度計算
   const getDayAchievement = useMemo(() => {
     const cache = {};
 
@@ -293,41 +312,47 @@ export default function App() {
         hasTask: true,
         total: tasksOnDate.length,
         completed,
-        rate, // 0.0 ~ 1.0
+        rate,
       };
       return cache[dateKey];
     };
   }, [userEvents]);
 
-  // 月表示用の黄緑背景クラス
+  // 月表示用背景色（ライト / ダーク対応）
   const getMonthCellBgClass = (dateKey) => {
     const ach = getDayAchievement(dateKey);
-    if (!ach.hasTask || ach.rate === 0) return 'bg-white';
-    if (ach.rate === 1.0) return 'bg-[#d9f99d]/75 border-lime-300'; // 100%達成！鮮やかな黄緑
-    if (ach.rate >= 0.5) return 'bg-[#ecfccb]/70 border-lime-200';  // 50%以上
-    return 'bg-[#f7fee7]/70 border-lime-100';                      // 一部達成
+    if (!ach.hasTask || ach.rate === 0) {
+      return isDark ? 'bg-[#1f1f1f]' : 'bg-white';
+    }
+    if (ach.rate === 1.0) {
+      return isDark ? 'bg-[#1b4721]/90 border-emerald-500/50' : 'bg-[#d9f99d]/75 border-lime-300';
+    }
+    if (ach.rate >= 0.5) {
+      return isDark ? 'bg-[#143d1a]/80 border-emerald-600/40' : 'bg-[#ecfccb]/70 border-lime-200';
+    }
+    return isDark ? 'bg-[#0f2e14]/70 border-emerald-700/30' : 'bg-[#f7fee7]/70 border-lime-100';
   };
 
-  // 年表示用の黄緑背景・文字色クラス
+  // 年表示用日付スタイル（ライト / ダーク対応）
   const getYearDayClass = (dateKey, isCurrent, isSun, isHol, isToday, isSelected) => {
     if (isToday) return 'bg-[#1a73e8] text-white font-medium shadow-xs';
-    if (isSelected) return 'bg-[#d2e3fc] text-[#174ea6] font-medium';
+    if (isSelected) return isDark ? 'bg-[#174ea6] text-white font-medium' : 'bg-[#d2e3fc] text-[#174ea6] font-medium';
 
     const ach = getDayAchievement(dateKey);
 
     if (ach.hasTask && ach.rate > 0) {
       if (ach.rate === 1.0) {
-        return 'bg-[#84cc16] text-white font-bold shadow-xs ring-1 ring-lime-600/40'; // 100%達成（草生やし最高段階）
+        return isDark ? 'bg-[#2ea043] text-white font-bold shadow-xs' : 'bg-[#84cc16] text-white font-bold shadow-xs';
       }
       if (ach.rate >= 0.5) {
-        return 'bg-[#bef264] text-lime-900 font-semibold'; // 50%以上達成
+        return isDark ? 'bg-[#238636] text-white font-semibold' : 'bg-[#bef264] text-lime-900 font-semibold';
       }
-      return 'bg-[#d9f99d] text-lime-800 font-medium';    // 一部達成
+      return isDark ? 'bg-[#0e4429] text-gray-200 font-medium' : 'bg-[#d9f99d] text-lime-800 font-medium';
     }
 
-    if (!isCurrent) return 'text-gray-300 hover:bg-gray-50';
-    if (isSun || isHol) return 'text-red-600 font-semibold hover:bg-red-50';
-    return 'text-gray-800 hover:bg-gray-100';
+    if (!isCurrent) return isDark ? 'text-gray-600 hover:bg-[#282a2d]' : 'text-gray-300 hover:bg-gray-50';
+    if (isSun || isHol) return 'text-red-500 font-semibold hover:bg-red-500/10';
+    return isDark ? 'text-gray-300 hover:bg-[#303134]' : 'text-gray-800 hover:bg-gray-100';
   };
 
   const getEventsForDate = (dateKey) => {
@@ -570,23 +595,27 @@ export default function App() {
   const currentViewLabel = viewMode === 'year' ? '年' : viewMode === 'month' ? '月' : 'チェック一覧';
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#f8fafd] text-[#3c4043] font-sans antialiased">
+    <div className={`flex flex-col h-screen w-screen overflow-hidden font-sans antialiased transition-colors duration-200 ${
+      isDark ? 'bg-[#121212] text-[#e8eaed]' : 'bg-[#f8fafd] text-[#3c4043]'
+    }`}>
       {/* タイトルバー */}
-      <div className="bg-[#202124] text-[#e8eaed] text-xs px-3 py-1 flex items-center justify-between select-none shrink-0 border-b border-[#3c4043]/40">
+      <div className={`${isDark ? 'bg-[#18191a] text-[#9aa0a6] border-[#3c4043]' : 'bg-[#202124] text-[#e8eaed] border-[#3c4043]/40'} text-xs px-3 py-1 flex items-center justify-between select-none shrink-0 border-b`}>
         <span className="font-medium tracking-wide">空のWebサイト</span>
-        <div className="flex items-center space-x-2 text-[11px] text-gray-400">
-          <span>チェックカレンダー - 達成度黄緑ヒートマップ対応</span>
+        <div className="flex items-center space-x-2 text-[11px] opacity-70">
+          <span>チェックカレンダー {isDark ? '🌙 ダーク' : '☀️ ライト'}</span>
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* サイドバー */}
         {isSidebarOpen && (
-          <aside className="w-[260px] min-w-[260px] bg-[#f8fafd] flex flex-col pt-3 px-3 z-30 select-none border-r border-gray-200/70 transition-all duration-200 shadow-sm sm:shadow-none">
+          <aside className={`w-[260px] min-w-[260px] flex flex-col pt-3 px-3 z-30 select-none border-r transition-all duration-200 ${
+            isDark ? 'bg-[#1e1e1e] border-[#3c4043]' : 'bg-[#f8fafd] border-gray-200/70 shadow-sm sm:shadow-none'
+          }`}>
             <div className="flex items-center h-10 mb-2 pl-1">
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="p-2 rounded-full hover:bg-gray-200 transition-colors text-gray-700"
+                className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-[#303134] text-gray-300' : 'hover:bg-gray-200 text-gray-700'}`}
                 title="メニューを閉じる"
               >
                 <X size={26} strokeWidth={1.8} />
@@ -597,34 +626,38 @@ export default function App() {
             <div className="mb-3 pl-1">
               <button
                 onClick={() => handleOpenCreateModal(selectedDate, '勉強')}
-                className="w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-white border border-gray-200/80 shadow-[0_1px_3px_0_rgba(60,64,67,0.3),0_4px_8px_3px_rgba(60,64,67,0.15)] hover:shadow-[0_2px_6px_2px_rgba(60,64,67,0.3),0_6px_10px_4px_rgba(60,64,67,0.15)] transition-all cursor-pointer group"
+                className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl border transition-all cursor-pointer group shadow-sm ${
+                  isDark
+                    ? 'bg-[#2d2e30] border-[#3c4043] text-gray-200 hover:bg-[#35373a]'
+                    : 'bg-white border-gray-200/80 text-gray-700 hover:shadow-md'
+                }`}
               >
-                <Plus size={20} className="text-[#3c4043] group-hover:rotate-90 transition-transform" strokeWidth={2.4} />
-                <span className="text-sm font-medium text-gray-700">目標・やること追加</span>
-                <ChevronDown size={14} className="text-gray-500 ml-auto" />
+                <Plus size={20} className="group-hover:rotate-90 transition-transform" strokeWidth={2.4} />
+                <span className="text-sm font-medium">目標・やること追加</span>
+                <ChevronDown size={14} className="ml-auto opacity-70" />
               </button>
             </div>
 
             {/* 達成度カラー凡例 */}
-            <div className="mb-3 px-2 py-2 bg-white/70 border border-gray-200/70 rounded-xl">
-              <span className="text-[10px] font-semibold text-gray-500 block mb-1">
+            <div className={`mb-3 px-2 py-2 border rounded-xl ${isDark ? 'bg-[#252628] border-[#3c4043]' : 'bg-white/70 border-gray-200/70'}`}>
+              <span className={`text-[10px] font-semibold block mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                 その日のタスク達成度
               </span>
-              <div className="flex items-center justify-between text-[10px] text-gray-500">
+              <div className="flex items-center justify-between text-[10px] opacity-75">
                 <span>0%</span>
                 <div className="flex items-center gap-1">
-                  <span className="w-3.5 h-3.5 rounded bg-gray-100 border border-gray-200" title="未完了"></span>
-                  <span className="w-3.5 h-3.5 rounded bg-[#f7fee7] border border-lime-200" title="一部達成"></span>
-                  <span className="w-3.5 h-3.5 rounded bg-[#bef264] border border-lime-300" title="50%以上達成"></span>
-                  <span className="w-3.5 h-3.5 rounded bg-[#84cc16] border border-lime-500" title="100%達成！"></span>
+                  <span className={`w-3.5 h-3.5 rounded border ${isDark ? 'bg-[#303134] border-[#3c4043]' : 'bg-gray-100 border-gray-200'}`} title="未完了"></span>
+                  <span className={`w-3.5 h-3.5 rounded border ${isDark ? 'bg-[#0e4429] border-[#1b4721]' : 'bg-[#f7fee7] border-lime-200'}`} title="一部達成"></span>
+                  <span className={`w-3.5 h-3.5 rounded border ${isDark ? 'bg-[#238636] border-[#2ea043]' : 'bg-[#bef264] border-lime-300'}`} title="50%以上達成"></span>
+                  <span className={`w-3.5 h-3.5 rounded border ${isDark ? 'bg-[#2ea043] border-[#3fb950]' : 'bg-[#84cc16] border-lime-500'}`} title="100%達成！"></span>
                 </div>
-                <span className="text-lime-700 font-bold">100%</span>
+                <span className={isDark ? 'text-emerald-400 font-bold' : 'text-lime-700 font-bold'}>100%</span>
               </div>
             </div>
 
             {/* タグフィルター */}
             <div className="mb-4 px-1">
-              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
+              <span className={`text-[11px] font-semibold uppercase tracking-wider block mb-1.5 flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                 <Filter size={12} />
                 タグで絞り込み
               </span>
@@ -634,6 +667,8 @@ export default function App() {
                   className={`text-[11px] px-2.5 py-1 rounded-full transition-all ${
                     selectedFilterTag === 'ALL'
                       ? 'bg-[#1a73e8] text-white font-medium'
+                      : isDark
+                      ? 'bg-[#303134] text-gray-300 hover:bg-[#3c4043]'
                       : 'bg-gray-200/70 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
@@ -646,6 +681,8 @@ export default function App() {
                     className={`text-[11px] px-2.5 py-1 rounded-full transition-all flex items-center gap-1 ${
                       selectedFilterTag === tag
                         ? 'bg-[#1a73e8] text-white font-medium'
+                        : isDark
+                        ? 'bg-[#252628] border border-[#3c4043] text-gray-300 hover:bg-[#303134]'
                         : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
                     }`}
                   >
@@ -658,20 +695,20 @@ export default function App() {
             {/* ミニカレンダー */}
             <div className="px-1">
               <div className="flex items-center justify-between mb-2 px-1">
-                <span className="text-sm font-medium text-gray-700">
+                <span className={`text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
                   {currentYear}年 {currentMonth}月
                 </span>
-                <div className="flex items-center space-x-0.5 text-gray-600">
+                <div className="flex items-center space-x-0.5 opacity-80">
                   <button
                     onClick={() => setCurrentDate(new Date(currentYear, currentMonth - 2, 1))}
-                    className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                    className={`p-1 rounded-full transition-colors ${isDark ? 'hover:bg-[#303134]' : 'hover:bg-gray-200'}`}
                     title="前月"
                   >
                     <ChevronLeft size={16} />
                   </button>
                   <button
                     onClick={() => setCurrentDate(new Date(currentYear, currentMonth, 1))}
-                    className="p-1 rounded-full hover:bg-gray-200 transition-colors"
+                    className={`p-1 rounded-full transition-colors ${isDark ? 'hover:bg-[#303134]' : 'hover:bg-gray-200'}`}
                     title="次月"
                   >
                     <ChevronRight size={16} />
@@ -679,7 +716,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-7 text-center mb-1 text-[11px] font-medium text-gray-500">
+              <div className={`grid grid-cols-7 text-center mb-1 text-[11px] font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                 {weekDayNames.map((day, idx) => (
                   <div key={idx} className="py-0.5">
                     {day}
@@ -693,6 +730,24 @@ export default function App() {
                   const isSun = (idx % 7 === 0);
                   const isHol = !!yearHolidays[d.dateKey];
 
+                  let style = isDark ? 'text-gray-500 hover:bg-[#303134]' : 'text-gray-400 hover:bg-gray-100';
+
+                  if (d.isToday) {
+                    style = 'bg-[#1a73e8] text-white font-medium shadow-xs';
+                  } else if (d.isSelected) {
+                    style = isDark ? 'bg-[#174ea6] text-white font-medium' : 'bg-[#d2e3fc] text-[#174ea6] font-medium';
+                  } else if (ach.hasTask && ach.rate > 0) {
+                    if (ach.rate === 1.0) {
+                      style = isDark ? 'bg-[#2ea043] text-white font-bold' : 'bg-[#84cc16] text-white font-bold';
+                    } else {
+                      style = isDark ? 'bg-[#0e4429] text-gray-200 font-medium' : 'bg-[#d9f99d] text-lime-800 font-medium';
+                    }
+                  } else if (d.isCurrent) {
+                    style = (isSun || isHol)
+                      ? 'text-red-500 font-semibold hover:bg-red-500/10'
+                      : isDark ? 'text-gray-200 hover:bg-[#303134]' : 'text-gray-800 hover:bg-gray-200';
+                  }
+
                   return (
                     <button
                       key={idx}
@@ -702,19 +757,7 @@ export default function App() {
                         setCurrentDate(new Date(y, m - 1, 1));
                         if (viewMode === 'year') setViewMode('month');
                       }}
-                      className={`h-7 w-7 mx-auto my-0.5 rounded-full flex items-center justify-center transition-colors text-[11px] ${
-                        d.isToday
-                          ? 'bg-[#1a73e8] text-white font-medium shadow-xs'
-                          : d.isSelected
-                          ? 'bg-[#d2e3fc] text-[#174ea6] font-medium'
-                          : ach.hasTask && ach.rate > 0
-                          ? ach.rate === 1.0
-                            ? 'bg-[#84cc16] text-white font-bold'
-                            : 'bg-[#d9f99d] text-lime-800 font-medium'
-                          : d.isCurrent
-                          ? (isSun || isHol ? 'text-red-600 font-semibold hover:bg-red-50' : 'text-gray-800 hover:bg-gray-200')
-                          : 'text-gray-400 hover:bg-gray-100'
-                      }`}
+                      className={`h-7 w-7 mx-auto my-0.5 rounded-full flex items-center justify-center transition-colors text-[11px] ${style}`}
                       title={ach.hasTask ? `${d.dateKey}: 達成度 ${Math.round(ach.rate * 100)}%` : d.dateKey}
                     >
                       {d.num}
@@ -725,17 +768,19 @@ export default function App() {
             </div>
 
             {/* 進捗バー */}
-            <div className="mt-auto pt-3 pb-2 border-t border-gray-200/80 px-2">
-              <div className="flex items-center justify-between text-xs font-medium text-gray-600 mb-1.5">
+            <div className={`mt-auto pt-3 pb-2 border-t px-2 ${isDark ? 'border-[#3c4043]' : 'border-gray-200/80'}`}>
+              <div className={`flex items-center justify-between text-xs font-medium mb-1.5 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                 <span className="flex items-center gap-1.5">
                   <Flame size={14} className="text-orange-500" />
                   日々の目標達成
                 </span>
-                <span className="text-[11px] bg-orange-50 text-orange-600 font-semibold px-2 py-0.5 rounded-full">
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                  isDark ? 'bg-orange-950/60 text-orange-400' : 'bg-orange-50 text-orange-600'
+                }`}>
                   {totalTargetDaysCount.completedTotal} / {totalTargetDaysCount.targetTotal} 日
                 </span>
               </div>
-              <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+              <div className={`w-full h-1.5 rounded-full overflow-hidden ${isDark ? 'bg-[#303134]' : 'bg-gray-200'}`}>
                 <div
                   className="bg-orange-500 h-full transition-all duration-300"
                   style={{
@@ -755,17 +800,23 @@ export default function App() {
               {!isSidebarOpen && (
                 <button
                   onClick={() => setIsSidebarOpen(true)}
-                  className="flex flex-col items-center justify-center w-12 h-12 rounded-full hover:bg-gray-200 transition-colors text-gray-700 mr-1"
+                  className={`flex flex-col items-center justify-center w-12 h-12 rounded-full transition-colors mr-1 ${
+                    isDark ? 'hover:bg-[#252628] text-gray-200' : 'hover:bg-gray-200 text-gray-700'
+                  }`}
                   title="メニューを開く"
                 >
                   <Menu size={22} strokeWidth={2} />
-                  <span className="text-[10px] leading-tight font-normal text-gray-700 -mt-0.5">メニュー</span>
+                  <span className="text-[10px] leading-tight font-normal -mt-0.5">メニュー</span>
                 </button>
               )}
 
               <button
                 onClick={handleGoToday}
-                className="px-4 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                className={`px-4 py-1.5 border rounded-md text-sm font-medium transition-colors ${
+                  isDark
+                    ? 'border-[#3c4043] bg-[#1e1e1e] text-gray-200 hover:bg-[#282a2d]'
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100'
+                }`}
                 title="今日（2026年11月）に戻る"
               >
                 今日
@@ -774,44 +825,63 @@ export default function App() {
               <div className="flex items-center space-x-1">
                 <button
                   onClick={handlePrev}
-                  className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
+                  className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-[#282a2d] text-gray-300' : 'hover:bg-gray-200 text-gray-600'}`}
                   title={viewMode === 'year' ? '前年' : '前月'}
                 >
                   <ChevronLeft size={18} />
                 </button>
                 <button
                   onClick={handleNext}
-                  className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
+                  className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-[#282a2d] text-gray-300' : 'hover:bg-gray-200 text-gray-600'}`}
                   title={viewMode === 'year' ? '次年' : '次月'}
                 >
                   <ChevronRight size={18} />
                 </button>
               </div>
 
-              <h1 className="text-xl font-medium text-gray-800 ml-2 tracking-tight">
+              <h1 className={`text-xl font-medium tracking-tight ml-2 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
                 {viewMode === 'year' ? `${currentYear}年` : `${currentYear}年 ${currentMonth}月`}
               </h1>
 
-              {/* 達成度ヒートマップの凡例 */}
-              <div className="hidden md:flex items-center gap-1.5 ml-3 px-2.5 py-1 bg-white border border-gray-200 rounded-full text-[11px] text-gray-500 shadow-2xs">
+              {/* 達成度ヒートマップ凡例 */}
+              <div className={`hidden md:flex items-center gap-1.5 ml-3 px-2.5 py-1 border rounded-full text-[11px] shadow-2xs ${
+                isDark ? 'bg-[#1e1e1e] border-[#3c4043] text-gray-400' : 'bg-white border-gray-200 text-gray-500'
+              }`}>
                 <span>達成度:</span>
-                <span className="w-2.5 h-2.5 rounded-full bg-gray-200" title="0%"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-[#d9f99d]" title="一部達成"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-[#bef264]" title="50%以上"></span>
-                <span className="w-2.5 h-2.5 rounded-full bg-[#84cc16]" title="100%達成！"></span>
+                <span className={`w-2.5 h-2.5 rounded-full ${isDark ? 'bg-[#303134]' : 'bg-gray-200'}`} title="0%"></span>
+                <span className={`w-2.5 h-2.5 rounded-full ${isDark ? 'bg-[#0e4429]' : 'bg-[#d9f99d]'}`} title="一部達成"></span>
+                <span className={`w-2.5 h-2.5 rounded-full ${isDark ? 'bg-[#238636]' : 'bg-[#bef264]'}`} title="50%以上"></span>
+                <span className={`w-2.5 h-2.5 rounded-full ${isDark ? 'bg-[#2ea043]' : 'bg-[#84cc16]'}`} title="100%達成！"></span>
               </div>
             </div>
 
             <div className="flex items-center space-x-1 sm:space-x-2">
+              {/* ダーク/ライトモード切り替えボタン */}
+              <button
+                onClick={toggleTheme}
+                className={`p-2 rounded-full transition-all ${
+                  isDark
+                    ? 'hover:bg-[#282a2d] text-yellow-400'
+                    : 'hover:bg-gray-200 text-gray-600'
+                }`}
+                title={isDark ? 'ライトモードに切り替え' : 'ダークモードに切り替え'}
+              >
+                {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+
               {isSearchOpen ? (
-                <div className="flex items-center bg-gray-100 rounded-full px-3 py-1 border border-gray-300 animate-in fade-in duration-150">
-                  <Search size={16} className="text-gray-500 mr-2" />
+                <div className={`flex items-center rounded-full px-3 py-1 border animate-in fade-in duration-150 ${
+                  isDark ? 'bg-[#252628] border-[#3c4043]' : 'bg-gray-100 border-gray-300'
+                }`}>
+                  <Search size={16} className="text-gray-400 mr-2" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="全体目標・1日の目標を検索..."
-                    className="bg-transparent border-none outline-none text-xs text-gray-700 w-36 sm:w-48"
+                    className={`bg-transparent border-none outline-none text-xs w-36 sm:w-48 ${
+                      isDark ? 'text-gray-100 placeholder-gray-500' : 'text-gray-700'
+                    }`}
                     autoFocus
                   />
                   <button
@@ -819,7 +889,7 @@ export default function App() {
                       setSearchQuery('');
                       setIsSearchOpen(false);
                     }}
-                    className="text-gray-400 hover:text-gray-600 ml-1"
+                    className="text-gray-400 hover:opacity-75 ml-1"
                   >
                     <X size={14} />
                   </button>
@@ -827,7 +897,7 @@ export default function App() {
               ) : (
                 <button
                   onClick={() => setIsSearchOpen(true)}
-                  className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
+                  className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-[#282a2d] text-gray-300' : 'hover:bg-gray-200 text-gray-600'}`}
                   title="検索"
                 >
                   <Search size={20} />
@@ -835,8 +905,8 @@ export default function App() {
               )}
 
               <button
-                onClick={() => alert('【達成度黄緑カラー機能】\n・タスクを完了すると、その日の達成率に応じてカレンダーの日付マスが黄緑色（ライトグリーン〜ライムグリーン）に変化します！\n・年間表示でも日々の達成度が黄緑の草生やし（ヒートマップ）として一目で振り返ることができます！')}
-                className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
+                onClick={() => alert('【ダークモード＆機能ガイド】\n・太陽/月アイコンでダークモードとライトモードをいつでも切り替えられます。\n・タスクを達成すると、その日の達成率に応じて黄緑色に染まります。\n・年間表示でも1年間の草生やし（達成度）を一覧できます！')}
+                className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-[#282a2d] text-gray-300' : 'hover:bg-gray-200 text-gray-600'}`}
                 title="ヘルプ"
               >
                 <HelpCircle size={20} />
@@ -849,29 +919,38 @@ export default function App() {
                     window.location.reload();
                   }
                 }}
-                className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
+                className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-[#282a2d] text-gray-300' : 'hover:bg-gray-200 text-gray-600'}`}
                 title="データ初期化"
               >
                 <Settings size={20} />
               </button>
 
+              {/* ビュー切替ドロップダウン */}
               <div className="relative">
                 <button
                   onClick={() => setIsViewDropdownOpen(prev => !prev)}
-                  className="flex items-center space-x-1.5 px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors ml-1"
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 border rounded-md text-sm font-medium transition-colors ml-1 ${
+                    isDark
+                      ? 'bg-[#1e1e1e] border-[#3c4043] text-gray-200 hover:bg-[#282a2d]'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-100'
+                  }`}
                 >
                   <span>{currentViewLabel}</span>
-                  <ChevronDown size={14} className="text-gray-500" />
+                  <ChevronDown size={14} className="opacity-70" />
                 </button>
 
                 {isViewDropdownOpen && (
-                  <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 animate-in fade-in duration-100">
+                  <div className={`absolute right-0 mt-1 w-36 border rounded-lg shadow-lg py-1 z-50 animate-in fade-in duration-100 ${
+                    isDark ? 'bg-[#252628] border-[#3c4043] text-gray-200' : 'bg-white border-gray-200 text-gray-700'
+                  }`}>
                     <button
                       onClick={() => {
                         setViewMode('month');
                         setIsViewDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 ${viewMode === 'month' ? 'font-semibold text-[#1a73e8]' : 'text-gray-700'}`}
+                      className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between ${
+                        isDark ? 'hover:bg-[#303134]' : 'hover:bg-gray-100'
+                      } ${viewMode === 'month' ? 'font-semibold text-[#1a73e8]' : ''}`}
                     >
                       <span>月表示</span>
                       {viewMode === 'month' && <Check size={14} />}
@@ -881,7 +960,9 @@ export default function App() {
                         setViewMode('year');
                         setIsViewDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 ${viewMode === 'year' ? 'font-semibold text-[#1a73e8]' : 'text-gray-700'}`}
+                      className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between ${
+                        isDark ? 'hover:bg-[#303134]' : 'hover:bg-gray-100'
+                      } ${viewMode === 'year' ? 'font-semibold text-[#1a73e8]' : ''}`}
                     >
                       <span>年表示</span>
                       {viewMode === 'year' && <Check size={14} />}
@@ -891,7 +972,9 @@ export default function App() {
                         setViewMode('check-list');
                         setIsViewDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 ${viewMode === 'check-list' ? 'font-semibold text-[#1a73e8]' : 'text-gray-700'}`}
+                      className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between ${
+                        isDark ? 'hover:bg-[#303134]' : 'hover:bg-gray-100'
+                      } ${viewMode === 'check-list' ? 'font-semibold text-[#1a73e8]' : ''}`}
                     >
                       <span>チェック一覧</span>
                       {viewMode === 'check-list' && <Check size={14} />}
@@ -904,9 +987,13 @@ export default function App() {
 
           {/* ビュー描画 */}
           {viewMode === 'month' ? (
-            /* =================== 月表示 (達成度に応じて背景が黄緑に染まる) =================== */
-            <main className="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
-              <div className="grid grid-cols-7 border-b border-gray-200 text-center py-2 text-xs font-medium text-gray-500 bg-white">
+            /* =================== 月表示 =================== */
+            <main className={`flex-1 flex flex-col border rounded-2xl overflow-hidden shadow-xs transition-colors duration-200 ${
+              isDark ? 'bg-[#1e1e1e] border-[#3c4043]' : 'bg-white border-gray-200'
+            }`}>
+              <div className={`grid grid-cols-7 border-b text-center py-2 text-xs font-medium ${
+                isDark ? 'border-[#3c4043] bg-[#222325] text-gray-400' : 'border-gray-200 bg-white text-gray-500'
+              }`}>
                 {weekDayNames.map((day, idx) => (
                   <div key={idx} className="flex justify-center">
                     <span className={idx === 0 ? 'text-red-500 font-semibold' : idx === 6 ? 'text-blue-500' : ''}>
@@ -916,7 +1003,9 @@ export default function App() {
                 ))}
               </div>
 
-              <div className={`flex-1 grid grid-cols-7 ${calendarGrid.length > 35 ? 'grid-rows-6' : 'grid-rows-5'} bg-white`}>
+              <div className={`flex-1 grid grid-cols-7 ${calendarGrid.length > 35 ? 'grid-rows-6' : 'grid-rows-5'} ${
+                isDark ? 'bg-[#18191a]' : 'bg-white'
+              }`}>
                 {calendarGrid.map((cell, idx) => {
                   const isColRightBorder = (idx + 1) % 7 !== 0;
                   const totalRows = calendarGrid.length / 7;
@@ -934,23 +1023,25 @@ export default function App() {
                         handleOpenCreateModal(cell.id, '勉強');
                       }}
                       className={`flex flex-col p-1 relative group transition-colors cursor-pointer overflow-hidden ${bgClass} ${
-                        isColRightBorder ? 'border-r border-gray-200' : ''
-                      } ${isRowBottomBorder ? 'border-b border-gray-200' : ''} ${
+                        isColRightBorder ? (isDark ? 'border-r border-[#3c4043]/60' : 'border-r border-gray-200') : ''
+                      } ${isRowBottomBorder ? (isDark ? 'border-b border-[#3c4043]/60' : 'border-b border-gray-200') : ''} ${
                         selectedDate === cell.id ? 'ring-2 ring-inset ring-blue-500' : ''
                       } hover:brightness-98`}
                     >
-                      {/* 日付ヘッダー ＋ 100%達成バッジ */}
+                      {/* 日付ヘッダー */}
                       <div className="flex justify-between items-center h-6 px-1 mb-1 shrink-0">
-                        {/* 左側: 達成率バッジ (タスクがある日のみ) */}
                         {ach.hasTask ? (
                           <span className={`text-[9px] font-bold px-1 rounded-sm ${
-                            ach.rate === 1.0 ? 'bg-[#84cc16] text-white' : ach.rate > 0 ? 'bg-lime-200 text-lime-900' : 'text-gray-400'
+                            ach.rate === 1.0
+                              ? (isDark ? 'bg-[#2ea043] text-white' : 'bg-[#84cc16] text-white')
+                              : ach.rate > 0
+                              ? (isDark ? 'bg-[#1e5828] text-emerald-300' : 'bg-lime-200 text-lime-900')
+                              : (isDark ? 'text-gray-500' : 'text-gray-400')
                           }`}>
                             {ach.completed}/{ach.total}
                           </span>
                         ) : <div className="w-4" />}
 
-                        {/* 中央: 日付数字 */}
                         {cell.isToday ? (
                           <div className="w-6 h-6 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-xs font-medium shadow-xs">
                             {cell.day}
@@ -959,21 +1050,20 @@ export default function App() {
                           <span
                             className={`text-xs ${
                               cell.isCurrentMonth
-                                ? (isSundayOrHoliday ? 'text-red-600 font-medium' : idx % 7 === 6 ? 'text-blue-600' : 'text-gray-800')
-                                : 'text-gray-400 font-light'
+                                ? (isSundayOrHoliday ? 'text-red-500 font-medium' : idx % 7 === 6 ? 'text-blue-500' : isDark ? 'text-gray-200' : 'text-gray-800')
+                                : (isDark ? 'text-gray-600 font-light' : 'text-gray-400 font-light')
                             }`}
                           >
                             {cell.display}
                           </span>
                         )}
 
-                        {/* 右側: 100%達成クラウン/星 */}
                         {ach.hasTask && ach.rate === 1.0 ? (
                           <span className="text-[10px]" title="全タスク達成！">🌟</span>
                         ) : <div className="w-4" />}
                       </div>
 
-                      {/* やること・目標リスト */}
+                      {/* イベントリスト */}
                       <div className="flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar">
                         {dayEvents.map((ev) => {
                           const colorObj = COLOR_OPTIONS.find(c => c.id === ev.color) || COLOR_OPTIONS[0];
@@ -997,7 +1087,9 @@ export default function App() {
                               onClick={(e) => handleOpenEditModal(ev, e)}
                               className={`flex flex-col p-1 text-[11px] leading-tight font-normal rounded shadow-xs transition-all cursor-pointer border ${
                                 isDailyDone
-                                  ? 'bg-lime-50/90 border-lime-300 text-gray-500'
+                                  ? isDark
+                                    ? 'bg-[#1b3d22]/80 border-emerald-700/60 text-gray-400'
+                                    : 'bg-lime-50/90 border-lime-300 text-gray-500'
                                   : `${colorObj.bg} text-white ${colorObj.border}`
                               } hover:brightness-95`}
                               title={`【全体の目標】${ev.overallGoal}\n【1日の目標】${ev.dailyGoal || 'なし'}`}
@@ -1008,7 +1100,7 @@ export default function App() {
                                   onClick={(e) => handleToggleDailyComplete(ev.id, cell.id, e)}
                                   className={`w-3.5 h-3.5 rounded flex items-center justify-center border shrink-0 transition-colors ${
                                     isDailyDone
-                                      ? 'bg-[#84cc16] border-[#84cc16] text-white shadow-2xs'
+                                      ? 'bg-[#2ea043] border-[#2ea043] text-white shadow-2xs'
                                       : 'bg-white/20 border-white/80 hover:bg-white/40 text-white'
                                   }`}
                                   title={isDailyDone ? '未達成に戻す' : '今日の目標を達成！'}
@@ -1016,13 +1108,13 @@ export default function App() {
                                   {isDailyDone && <Check size={10} strokeWidth={3} className="text-white" />}
                                 </button>
 
-                                <span className={`truncate font-medium ${isDailyDone ? 'line-through text-gray-500' : 'text-white'}`}>
+                                <span className={`truncate font-medium ${isDailyDone ? 'line-through opacity-70' : 'text-white'}`}>
                                   {ev.dailyGoal ? ev.dailyGoal : ev.overallGoal}
                                 </span>
                               </div>
 
                               {ev.dailyGoal && (
-                                <div className={`text-[9px] truncate pl-4.5 mt-0.5 flex items-center gap-1 ${isDailyDone ? 'text-gray-400' : 'text-white/80'}`}>
+                                <div className={`text-[9px] truncate pl-4.5 mt-0.5 flex items-center gap-1 ${isDailyDone ? 'opacity-60' : 'text-white/80'}`}>
                                   <span className="truncate">🎯 {ev.overallGoal}</span>
                                 </div>
                               )}
@@ -1032,7 +1124,9 @@ export default function App() {
                       </div>
 
                       <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-5 h-5 rounded-full bg-blue-100 text-[#1a73e8] flex items-center justify-center">
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                          isDark ? 'bg-blue-900/60 text-blue-300' : 'bg-blue-100 text-[#1a73e8]'
+                        }`}>
                           <Plus size={12} strokeWidth={2.5} />
                         </div>
                       </div>
@@ -1042,8 +1136,10 @@ export default function App() {
               </div>
             </main>
           ) : viewMode === 'year' ? (
-            /* =================== 年間表示 (その日の達成度が黄緑の草生やしで見える) =================== */
-            <main className="flex-1 bg-white border border-gray-200 rounded-2xl overflow-y-auto p-4 sm:p-6 shadow-xs">
+            /* =================== 年間表示 =================== */
+            <main className={`flex-1 border rounded-2xl overflow-y-auto p-4 sm:p-6 shadow-xs transition-colors duration-200 ${
+              isDark ? 'bg-[#1e1e1e] border-[#3c4043]' : 'bg-white border-gray-200'
+            }`}>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 max-w-7xl mx-auto">
                 {yearMonthsData.map((m) => (
                   <div key={m.monthNum} className="flex flex-col">
@@ -1053,13 +1149,15 @@ export default function App() {
                           setCurrentDate(new Date(currentYear, m.monthNum - 1, 1));
                           setViewMode('month');
                         }}
-                        className="text-sm font-semibold text-gray-800 hover:text-[#1a73e8] transition-colors"
+                        className={`text-sm font-semibold transition-colors ${
+                          isDark ? 'text-gray-200 hover:text-blue-400' : 'text-gray-800 hover:text-[#1a73e8]'
+                        }`}
                       >
                         {m.title}
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-7 text-center mb-1 text-[11px] font-medium text-gray-500">
+                    <div className={`grid grid-cols-7 text-center mb-1 text-[11px] font-medium ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                       {weekDayNames.map((day, idx) => (
                         <div key={idx} className="py-0.5">
                           {day}
@@ -1072,7 +1170,7 @@ export default function App() {
                         const isHol = !!yearHolidays[d.dateKey];
                         const isSun = (idx % 7 === 0);
                         const ach = getDayAchievement(d.dateKey);
-                        const dayStyle = getYearDayClass(d.dateKey, d.isCurrent, isSun, isHol, d.isToday, d.isSelected);
+                        const dayStyle = getYearDayClass(d.dateKey, d.isCurrent, isSun, isHol, d.dateKey === todayKey, d.dateKey === selectedDate);
 
                         return (
                           <button
@@ -1097,14 +1195,16 @@ export default function App() {
             </main>
           ) : (
             /* =================== チェック一覧 =================== */
-            <main className="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs p-6">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4">
+            <main className={`flex-1 flex flex-col border rounded-2xl overflow-hidden shadow-xs p-6 transition-colors duration-200 ${
+              isDark ? 'bg-[#1e1e1e] border-[#3c4043]' : 'bg-white border-gray-200'
+            }`}>
+              <div className={`flex items-center justify-between pb-4 border-b mb-4 ${isDark ? 'border-[#3c4043]' : 'border-gray-200'}`}>
                 <div>
-                  <h2 className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                  <h2 className={`text-lg font-medium flex items-center gap-2 ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
                     <Target size={20} className="text-[#1a73e8]" />
                     目標・やること進捗一覧
                   </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">全体の目標と日々の達成状況を一覧で管理できます</p>
+                  <p className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>全体の目標と日々の達成状況を一覧で管理できます</p>
                 </div>
                 <button
                   onClick={() => handleOpenCreateModal(selectedDate, '勉強')}
@@ -1117,13 +1217,12 @@ export default function App() {
 
               <div className="flex-1 overflow-y-auto space-y-3 pr-1">
                 {taskEvents.length === 0 ? (
-                  <div className="h-48 flex flex-col items-center justify-center text-gray-400">
+                  <div className="h-48 flex flex-col items-center justify-center text-gray-500">
                     <CheckSquare size={36} className="mb-2 stroke-1" />
                     <p className="text-sm">登録されている目標はありません</p>
                   </div>
                 ) : (
                   taskEvents.map((t) => {
-                    const colorObj = COLOR_OPTIONS.find(c => c.id === t.color) || COLOR_OPTIONS[0];
                     const totalDays = calculateDaysCount(t.startDate, t.endDate);
                     const doneDaysCount = Object.values(t.completedDates || {}).filter(Boolean).length;
                     const percent = Math.round((doneDaysCount / totalDays) * 100);
@@ -1131,39 +1230,49 @@ export default function App() {
                     return (
                       <div
                         key={t.id}
-                        className="p-4 rounded-xl border border-gray-200 bg-white shadow-xs hover:border-blue-300 transition-all"
+                        className={`p-4 rounded-xl border transition-all ${
+                          isDark
+                            ? 'bg-[#252628] border-[#3c4043] hover:border-blue-500/50'
+                            : 'bg-white border-gray-200 shadow-xs hover:border-blue-300'
+                        }`}
                       >
                         <div className="flex items-start justify-between">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-[#1a73e8] uppercase tracking-wider">
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+                                isDark ? 'bg-blue-950 text-blue-300' : 'bg-blue-100 text-[#1a73e8]'
+                              }`}>
                                 全体の目標
                               </span>
-                              <span className="text-base font-bold text-gray-800">
+                              <span className={`text-base font-bold ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
                                 {t.overallGoal}
                               </span>
                               {t.tag && (
-                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+                                <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${
+                                  isDark ? 'bg-[#303134] text-gray-300' : 'bg-gray-100 text-gray-600'
+                                }`}>
                                   #{t.tag}
                                 </span>
                               )}
                             </div>
 
                             {t.dailyGoal && (
-                              <div className="flex items-center gap-2 text-sm text-gray-700 pl-1 mt-1">
-                                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                              <div className="flex items-center gap-2 text-sm pl-1 mt-1">
+                                <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                                  isDark ? 'bg-emerald-950/70 text-emerald-300' : 'bg-emerald-50 text-emerald-700'
+                                }`}>
                                   1日の目標
                                 </span>
-                                <span className="font-medium text-gray-800">{t.dailyGoal}</span>
+                                <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{t.dailyGoal}</span>
                               </div>
                             )}
 
-                            <div className="flex items-center gap-4 text-xs text-gray-500 pt-1 pl-1">
+                            <div className={`flex items-center gap-4 text-xs pt-1 pl-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                               <span className="flex items-center gap-1">
-                                <Clock size={13} className="text-gray-400" />
+                                <Clock size={13} className="opacity-70" />
                                 <span>期間: {t.startDate} 〜 {t.endDate} ({totalDays}日間)</span>
                               </span>
-                              <span className="flex items-center gap-1 font-semibold text-orange-600">
+                              <span className={`flex items-center gap-1 font-semibold ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
                                 <Flame size={13} />
                                 <span>達成状況: {doneDaysCount} / {totalDays} 日完了 ({percent}%)</span>
                               </span>
@@ -1173,7 +1282,9 @@ export default function App() {
                           <div className="flex items-center gap-1">
                             <button
                               onClick={(e) => handleOpenEditModal(t, e)}
-                              className="px-2.5 py-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg text-xs font-medium transition-colors"
+                              className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                isDark ? 'text-gray-300 hover:bg-[#303134]' : 'text-gray-600 hover:bg-gray-100'
+                              }`}
                             >
                               編集
                             </button>
@@ -1182,7 +1293,9 @@ export default function App() {
                                 setActiveEvent(t);
                                 handleDeleteEvent();
                               }}
-                              className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                              className={`p-1.5 rounded-lg transition-colors ${
+                                isDark ? 'text-red-400 hover:bg-red-950/40' : 'text-red-500 hover:bg-red-50'
+                              }`}
                               title="削除"
                             >
                               <Trash2 size={16} />
@@ -1190,9 +1303,9 @@ export default function App() {
                           </div>
                         </div>
 
-                        <div className="mt-3 w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                        <div className={`mt-3 w-full h-2 rounded-full overflow-hidden ${isDark ? 'bg-[#303134]' : 'bg-gray-100'}`}>
                           <div
-                            className={`h-full transition-all duration-300 ${percent === 100 ? 'bg-[#84cc16]' : 'bg-[#1a73e8]'}`}
+                            className={`h-full transition-all duration-300 ${percent === 100 ? (isDark ? 'bg-[#2ea043]' : 'bg-[#84cc16]') : 'bg-[#1a73e8]'}`}
                             style={{ width: `${percent}%` }}
                           />
                         </div>
@@ -1208,59 +1321,71 @@ export default function App() {
 
       {/* モーダル */}
       {modalMode && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100 transform transition-all"
+            className={`rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border transform transition-all ${
+              isDark ? 'bg-[#202124] border-[#3c4043] text-gray-200' : 'bg-white border-gray-100 text-gray-800'
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-100">
-              <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+            <div className={`flex items-center justify-between px-6 py-4 border-b ${
+              isDark ? 'bg-[#282a2d] border-[#3c4043]' : 'bg-gray-50 border-gray-100'
+            }`}>
+              <h3 className="text-base font-semibold flex items-center gap-2">
                 <Target size={18} className="text-[#1a73e8]" />
                 {modalMode === 'create' ? '目標・やることの設定' : '目標・やることの編集'}
               </h3>
               <button
                 onClick={() => setModalMode(null)}
-                className="p-1.5 rounded-full hover:bg-gray-200 text-gray-500 transition-colors"
+                className={`p-1.5 rounded-full transition-colors ${isDark ? 'hover:bg-[#3c4043] text-gray-400' : 'hover:bg-gray-200 text-gray-500'}`}
               >
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleSaveEvent} className="p-6 space-y-4">
-              <div className="bg-blue-50/50 p-3.5 rounded-xl border border-blue-100">
+              <div className={`p-3.5 rounded-xl border ${
+                isDark ? 'bg-[#1e2838]/60 border-blue-900/60' : 'bg-blue-50/50 border-blue-100'
+              }`}>
                 <label className="block text-xs font-bold text-[#1a73e8] mb-1 flex items-center gap-1.5">
                   <Target size={14} />
                   ① 全体の目標（ゴール） <span className="text-red-500">*</span>
                 </label>
-                <p className="text-[11px] text-gray-500 mb-2">期間全体を通して達成したい最終ゴールを入力してください</p>
+                <p className={`text-[11px] mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>期間全体を通して達成したい最終ゴールを入力してください</p>
                 <input
                   type="text"
                   required
                   value={formData.overallGoal}
                   onChange={(e) => setFormData({ ...formData, overallGoal: e.target.value })}
                   placeholder="例: 単語帳1900語を完全走破、基本情報過去問3年分制覇"
-                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a73e8] transition-all"
+                  className={`w-full px-3.5 py-2.5 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a73e8] border ${
+                    isDark ? 'bg-[#282a2d] border-[#3c4043] text-gray-100 placeholder-gray-500' : 'bg-white border-blue-200 text-gray-800'
+                  }`}
                   autoFocus
                 />
               </div>
 
-              <div className="bg-emerald-50/50 p-3.5 rounded-xl border border-emerald-100">
-                <label className="block text-xs font-bold text-emerald-700 mb-1 flex items-center gap-1.5">
+              <div className={`p-3.5 rounded-xl border ${
+                isDark ? 'bg-[#183020]/60 border-emerald-900/60' : 'bg-emerald-50/50 border-emerald-100'
+              }`}>
+                <label className={`block text-xs font-bold mb-1 flex items-center gap-1.5 ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
                   <Flame size={14} />
                   ② 1日に達成する目標（日々のノルマ）
                 </label>
-                <p className="text-[11px] text-gray-500 mb-2">カレンダーの各マスに表示され、毎日チェックできる目標です</p>
+                <p className={`text-[11px] mb-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>カレンダーの各マスに表示され、毎日チェックできる目標です</p>
                 <input
                   type="text"
                   value={formData.dailyGoal}
                   onChange={(e) => setFormData({ ...formData, dailyGoal: e.target.value })}
                   placeholder="例: 1日50単語暗記＋復習テスト、1日午前過去問20問解く"
-                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-emerald-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all"
+                  className={`w-full px-3.5 py-2.5 text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 border ${
+                    isDark ? 'bg-[#282a2d] border-[#3c4043] text-gray-100 placeholder-gray-500' : 'bg-white border-emerald-200 text-gray-800'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center justify-between">
+                <label className={`block text-xs font-semibold mb-1.5 flex items-center justify-between ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   <span className="flex items-center gap-1">
                     <Clock size={13} />
                     やる期間（期間指定）
@@ -1271,7 +1396,7 @@ export default function App() {
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <span className="block text-[11px] text-gray-500 mb-1">開始日</span>
+                    <span className={`block text-[11px] mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>開始日</span>
                     <input
                       type="date"
                       required
@@ -1284,25 +1409,29 @@ export default function App() {
                           endDate: prev.endDate < newStart ? newStart : prev.endDate,
                         }));
                       }}
-                      className="w-full px-2.5 py-2 text-xs border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]"
+                      className={`w-full px-2.5 py-2 text-xs rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8] border ${
+                        isDark ? 'bg-[#282a2d] border-[#3c4043] text-gray-200' : 'border-gray-300'
+                      }`}
                     />
                   </div>
                   <div>
-                    <span className="block text-[11px] text-gray-500 mb-1">終了日</span>
+                    <span className={`block text-[11px] mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>終了日</span>
                     <input
                       type="date"
                       required
                       min={formData.startDate}
                       value={formData.endDate}
                       onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                      className="w-full px-2.5 py-2 text-xs border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]"
+                      className={`w-full px-2.5 py-2 text-xs rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8] border ${
+                        isDark ? 'bg-[#282a2d] border-[#3c4043] text-gray-200' : 'border-gray-300'
+                      }`}
                     />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1">
+                <label className={`block text-xs font-semibold mb-1.5 flex items-center gap-1 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                   <TagIcon size={13} />
                   タグ（カテゴリー）
                 </label>
@@ -1314,7 +1443,11 @@ export default function App() {
                       onClick={() => setFormData({ ...formData, tag: t.name, color: t.color })}
                       className={`text-xs px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1 ${
                         formData.tag === t.name
-                          ? 'bg-blue-50 border-[#1a73e8] text-[#1a73e8] font-semibold'
+                          ? isDark
+                            ? 'bg-blue-950/70 border-blue-500 text-blue-300 font-semibold'
+                            : 'bg-blue-50 border-[#1a73e8] text-[#1a73e8] font-semibold'
+                          : isDark
+                          ? 'bg-[#282a2d] border-[#3c4043] text-gray-300 hover:bg-[#303134]'
                           : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
                       }`}
                     >
@@ -1328,12 +1461,14 @@ export default function App() {
                   value={formData.tag}
                   onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
                   placeholder="または自由入力（例: 資格対策、プログラミング）"
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#1a73e8]"
+                  className={`w-full px-3 py-1.5 text-xs rounded-lg focus:outline-none focus:ring-1 focus:ring-[#1a73e8] border ${
+                    isDark ? 'bg-[#282a2d] border-[#3c4043] text-gray-200' : 'border-gray-200'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">タグカラー</label>
+                <label className={`block text-xs font-semibold mb-1.5 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>タグカラー</label>
                 <div className="flex items-center gap-3">
                   {COLOR_OPTIONS.map((c) => (
                     <button
@@ -1350,12 +1485,14 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <div className={`flex items-center justify-between pt-4 border-t ${isDark ? 'border-[#3c4043]' : 'border-gray-100'}`}>
                 {modalMode === 'edit' ? (
                   <button
                     type="button"
                     onClick={handleDeleteEvent}
-                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-colors ${
+                      isDark ? 'text-red-400 hover:bg-red-950/40' : 'text-red-600 hover:bg-red-50'
+                    }`}
                   >
                     <Trash2 size={15} />
                     削除
@@ -1366,7 +1503,9 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setModalMode(null)}
-                    className="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+                    className={`px-4 py-2 text-xs font-medium rounded-xl transition-colors ${
+                      isDark ? 'text-gray-400 hover:bg-[#303134]' : 'text-gray-600 hover:bg-gray-100'
+                    }`}
                   >
                     キャンセル
                   </button>

@@ -6,13 +6,17 @@
   <title>空のWebサイト - チェックカレンダー</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    };
+  </script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     body {
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #f8fafd;
       user-select: none;
     }
     .no-scrollbar::-webkit-scrollbar {
@@ -24,79 +28,79 @@
     }
   </style>
 </head>
-<body class="flex flex-col h-screen w-screen overflow-hidden text-[#3c4043] antialiased">
+<body class="flex flex-col h-screen w-screen overflow-hidden text-[#3c4043] dark:text-[#e8eaed] bg-[#f8fafd] dark:bg-[#121212] antialiased">
 
   <!-- タイトルバー -->
   <div class="bg-[#202124] text-[#e8eaed] text-xs px-3 py-1 flex items-center justify-between select-none shrink-0 border-b border-[#3c4043]/40">
     <span class="font-medium tracking-wide">空のWebサイト</span>
-    <span class="text-[11px] text-gray-400">チェックカレンダー - 達成度黄緑ヒートマップ対応</span>
+    <span class="text-[11px] text-gray-400">チェックカレンダー - 達成度黄緑ヒートマップ & ダークモード対応</span>
   </div>
 
   <div class="flex flex-1 overflow-hidden relative">
     <!-- サイドバー -->
-    <aside id="sidebar" class="hidden w-[260px] min-w-[260px] bg-[#f8fafd] flex-col pt-3 px-3 z-30 select-none border-r border-gray-200/70">
+    <aside id="sidebar" class="hidden w-[260px] min-w-[260px] bg-[#f8fafd] dark:bg-[#1e1e1e] flex-col pt-3 px-3 z-30 select-none border-r border-gray-200/70 dark:border-[#3c4043]">
       <div class="flex items-center h-10 mb-2 pl-1">
-        <button id="closeSidebarBtn" class="p-2 rounded-full hover:bg-gray-200 transition-colors text-gray-700" title="メニューを閉じる">
+        <button id="closeSidebarBtn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#282a2d] transition-colors text-gray-700 dark:text-gray-300" title="メニューを閉じる">
           <i data-lucide="x" class="w-6 h-6 stroke-[1.8]"></i>
         </button>
       </div>
 
       <!-- + 作成 ▾ ボタン -->
       <div class="mb-3 pl-1">
-        <button id="createEventBtn" class="w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-white border border-gray-200/80 shadow-[0_1px_3px_0_rgba(60,64,67,0.3),0_4px_8px_3px_rgba(60,64,67,0.15)] hover:shadow-[0_2px_6px_2px_rgba(60,64,67,0.3),0_6px_10px_4px_rgba(60,64,67,0.15)] transition-all cursor-pointer group">
-          <i data-lucide="plus" class="w-5 h-5 text-[#3c4043] stroke-[2.4]"></i>
-          <span class="text-sm font-medium text-gray-700">目標・やること追加</span>
+        <button id="createEventBtn" class="w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-white dark:bg-[#282a2d] border border-gray-200/80 dark:border-[#3c4043] shadow-[0_1px_3px_0_rgba(60,64,67,0.3),0_4px_8px_3px_rgba(60,64,67,0.15)] hover:shadow-[0_2px_6px_2px_rgba(60,64,67,0.3),0_6px_10px_4px_rgba(60,64,67,0.15)] transition-all cursor-pointer group">
+          <i data-lucide="plus" class="w-5 h-5 text-[#3c4043] dark:text-[#e8eaed] stroke-[2.4]"></i>
+          <span class="text-sm font-medium text-gray-700 dark:text-gray-200">目標・やること追加</span>
           <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500 ml-auto"></i>
         </button>
       </div>
 
       <!-- 達成度カラー凡例 -->
-      <div class="mb-3 px-2 py-2 bg-white/70 border border-gray-200/70 rounded-xl">
-        <span class="text-[10px] font-semibold text-gray-500 block mb-1">
+      <div class="mb-3 px-2 py-2 bg-white/70 dark:bg-[#282a2d]/70 border border-gray-200/70 dark:border-[#3c4043] rounded-xl">
+        <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 block mb-1">
           その日のタスク達成度
         </span>
-        <div class="flex items-center justify-between text-[10px] text-gray-500">
+        <div class="flex items-center justify-between text-[10px] text-gray-500 dark:text-gray-400">
           <span>0%</span>
           <div class="flex items-center gap-1">
-            <span class="w-3.5 h-3.5 rounded bg-gray-100 border border-gray-200" title="未完了"></span>
-            <span class="w-3.5 h-3.5 rounded bg-[#f7fee7] border border-lime-200" title="一部達成"></span>
-            <span class="w-3.5 h-3.5 rounded bg-[#bef264] border border-lime-300" title="50%以上達成"></span>
-            <span class="w-3.5 h-3.5 rounded bg-[#84cc16] border border-lime-500" title="100%達成！"></span>
+            <span class="w-3.5 h-3.5 rounded bg-gray-100 dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#3c4043]" title="未完了"></span>
+            <span class="w-3.5 h-3.5 rounded bg-[#f7fee7] dark:bg-[#0e4429] border border-lime-200 dark:border-emerald-700/50" title="一部達成"></span>
+            <span class="w-3.5 h-3.5 rounded bg-[#bef264] dark:bg-[#238636] border border-lime-300 dark:border-emerald-600/50" title="50%以上達成"></span>
+            <span class="w-3.5 h-3.5 rounded bg-[#84cc16] dark:bg-[#2ea043] border border-lime-500 dark:border-emerald-500/50" title="100%達成！"></span>
           </div>
-          <span class="text-lime-700 font-bold">100%</span>
+          <span class="text-lime-700 dark:text-emerald-400 font-bold">100%</span>
         </div>
       </div>
 
       <!-- タグフィルター -->
       <div class="mb-4 px-1">
-        <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
+        <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
           <i data-lucide="filter" class="w-3 h-3"></i>
           タグで絞り込み
         </span>
         <div id="filterTagGroup" class="flex flex-wrap gap-1">
           <button data-filter="ALL" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-[#1a73e8] text-white font-medium transition-all">すべて</button>
-          <button data-filter="勉強" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 hover:border-gray-300 transition-all">#勉強</button>
-          <button data-filter="仕事" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 hover:border-gray-300 transition-all">#仕事</button>
-          <button data-filter="運動" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 hover:border-gray-300 transition-all">#運動</button>
-          <button data-filter="読書" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 hover:border-gray-300 transition-all">#読書</button>
+          <button data-filter="勉強" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white dark:bg-[#282a2d] border border-gray-200 dark:border-[#3c4043] text-gray-700 dark:text-gray-200 hover:border-gray-300 transition-all">#勉強</button>
+          <button data-filter="仕事" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white dark:bg-[#282a2d] border border-gray-200 dark:border-[#3c4043] text-gray-700 dark:text-gray-200 hover:border-gray-300 transition-all">#仕事</button>
+          <button data-filter="運動" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white dark:bg-[#282a2d] border border-gray-200 dark:border-[#3c4043] text-gray-700 dark:text-gray-200 hover:border-gray-300 transition-all">#運動</button>
+          <button data-filter="読書" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white dark:bg-[#282a2d] border border-gray-200 dark:border-[#3c4043] text-gray-700 dark:text-gray-200 hover:border-gray-300 transition-all">#読書</button>
         </div>
       </div>
 
       <!-- ミニカレンダー -->
       <div class="px-1">
         <div class="flex items-center justify-between mb-2 px-1">
-          <span id="miniMonthTitle" class="text-sm font-medium text-gray-700">2026年 11月</span>
-          <div class="flex items-center space-x-0.5 text-gray-600">
-            <button id="miniPrevBtn" class="p-1 rounded-full hover:bg-gray-200 transition-colors">
+          <span id="miniMonthTitle" class="text-sm font-medium text-gray-700 dark:text-gray-200">2026年 11月</span>
+          <div class="flex items-center space-x-0.5 text-gray-600 dark:text-gray-300">
+            <button id="miniPrevBtn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-[#282a2d] transition-colors">
               <i data-lucide="chevron-left" class="w-4 h-4"></i>
             </button>
-            <button id="miniNextBtn" class="p-1 rounded-full hover:bg-gray-200 transition-colors">
+            <button id="miniNextBtn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-[#282a2d] transition-colors">
               <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </button>
           </div>
         </div>
 
-        <div class="grid grid-cols-7 text-center mb-1 text-[11px] font-medium text-gray-500">
+        <div class="grid grid-cols-7 text-center mb-1 text-[11px] font-medium text-gray-500 dark:text-gray-400">
           <div class="py-0.5">日</div>
           <div class="py-0.5">月</div>
           <div class="py-0.5">火</div>
@@ -110,15 +114,15 @@
       </div>
 
       <!-- 進捗バー -->
-      <div class="mt-auto pt-3 pb-2 border-t border-gray-200/80 px-2">
-        <div class="flex items-center justify-between text-xs font-medium text-gray-600 mb-1.5">
+      <div class="mt-auto pt-3 pb-2 border-t border-gray-200/80 dark:border-[#3c4043] px-2">
+        <div class="flex items-center justify-between text-xs font-medium text-gray-600 dark:text-gray-300 mb-1.5">
           <span class="flex items-center gap-1.5">
             <i data-lucide="flame" class="w-3.5 h-3.5 text-orange-500"></i>
             日々の目標達成
           </span>
-          <span id="taskProgressText" class="text-[11px] bg-orange-50 text-orange-600 font-semibold px-2 py-0.5 rounded-full">0 / 0 日</span>
+          <span id="taskProgressText" class="text-[11px] bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 font-semibold px-2 py-0.5 rounded-full">0 / 0 日</span>
         </div>
-        <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+        <div class="w-full bg-gray-200 dark:bg-[#303134] h-1.5 rounded-full overflow-hidden">
           <div id="taskProgressBar" class="bg-orange-500 h-full transition-all duration-300" style="width: 0%"></div>
         </div>
       </div>
@@ -129,72 +133,77 @@
       <!-- 上部ヘッダー -->
       <header class="flex items-center justify-between h-14 px-2 select-none mb-1">
         <div class="flex items-center space-x-2 sm:space-x-3">
-          <button id="openSidebarBtn" class="flex flex-col items-center justify-center w-12 h-12 rounded-full hover:bg-gray-200 transition-colors text-gray-700 mr-1" title="メニューを開く">
+          <button id="openSidebarBtn" class="flex flex-col items-center justify-center w-12 h-12 rounded-full hover:bg-gray-200 dark:hover:bg-[#282a2d] transition-colors text-gray-700 dark:text-gray-300 mr-1" title="メニューを開く">
             <i data-lucide="menu" class="w-5 h-5 stroke-[2]"></i>
-            <span class="text-[10px] leading-tight font-normal text-gray-700 -mt-0.5">メニュー</span>
+            <span class="text-[10px] leading-tight font-normal text-gray-700 dark:text-gray-300 -mt-0.5">メニュー</span>
           </button>
 
-          <button id="todayBtn" class="px-4 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
+          <button id="todayBtn" class="px-4 py-1.5 border border-gray-300 dark:border-[#3c4043] rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#282a2d] transition-colors">
             今日
           </button>
 
           <div class="flex items-center space-x-1">
-            <button id="prevBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors">
+            <button id="prevBtn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#282a2d] text-gray-600 dark:text-gray-300 transition-colors">
               <i data-lucide="chevron-left" class="w-4 h-4"></i>
             </button>
-            <button id="nextBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors">
+            <button id="nextBtn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#282a2d] text-gray-600 dark:text-gray-300 transition-colors">
               <i data-lucide="chevron-right" class="w-4 h-4"></i>
             </button>
           </div>
 
-          <h1 id="headerTitle" class="text-xl font-medium text-gray-800 ml-2 tracking-tight">
+          <h1 id="headerTitle" class="text-xl font-medium text-gray-800 dark:text-gray-100 ml-2 tracking-tight">
             2026年 11月
           </h1>
 
-          <div class="hidden md:flex items-center gap-1.5 ml-3 px-2.5 py-1 bg-white border border-gray-200 rounded-full text-[11px] text-gray-500 shadow-2xs">
+          <div class="hidden md:flex items-center gap-1.5 ml-3 px-2.5 py-1 bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#3c4043] rounded-full text-[11px] text-gray-500 dark:text-gray-400 shadow-2xs">
             <span>達成度:</span>
-            <span class="w-2.5 h-2.5 rounded-full bg-gray-200" title="0%"></span>
-            <span class="w-2.5 h-2.5 rounded-full bg-[#d9f99d]" title="一部達成"></span>
-            <span class="w-2.5 h-2.5 rounded-full bg-[#bef264]" title="50%以上"></span>
-            <span class="w-2.5 h-2.5 rounded-full bg-[#84cc16]" title="100%達成！"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-gray-200 dark:bg-gray-700" title="0%"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#d9f99d] dark:bg-[#0e4429]" title="一部達成"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#bef264] dark:bg-[#238636]" title="50%以上"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#84cc16] dark:bg-[#2ea043]" title="100%達成！"></span>
           </div>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-2">
-          <div id="searchContainer" class="hidden items-center bg-gray-100 rounded-full px-3 py-1 border border-gray-300">
-            <i data-lucide="search" class="w-4 h-4 text-gray-500 mr-2"></i>
-            <input id="searchInput" type="text" placeholder="全体目標・1日の目標を検索..." class="bg-transparent border-none outline-none text-xs text-gray-700 w-36 sm:w-48">
-            <button id="closeSearchBtn" class="text-gray-400 hover:text-gray-600 ml-1">
+          <div id="searchContainer" class="hidden items-center bg-gray-100 dark:bg-[#282a2d] rounded-full px-3 py-1 border border-gray-300 dark:border-[#3c4043]">
+            <i data-lucide="search" class="w-4 h-4 text-gray-500 dark:text-gray-400 mr-2"></i>
+            <input id="searchInput" type="text" placeholder="全体目標・1日の目標を検索..." class="bg-transparent border-none outline-none text-xs text-gray-700 dark:text-gray-200 w-36 sm:w-48">
+            <button id="closeSearchBtn" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 ml-1">
               <i data-lucide="x" class="w-3.5 h-3.5"></i>
             </button>
           </div>
-          <button id="openSearchBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="検索">
+          <button id="openSearchBtn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#282a2d] text-gray-600 dark:text-gray-300 transition-colors" title="検索">
             <i data-lucide="search" class="w-5 h-5"></i>
           </button>
 
-          <button onclick="alert('【達成度黄緑カラー機能】\n・タスクを完了すると、その日の達成度に応じてカレンダーの日付マスが黄緑色（ライトグリーン〜ライムグリーン）に変化します！\n・年間表示でも日々の達成度が黄緑の草生やし（ヒートマップ）として一目で振り返ることができます！')" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="サポート">
+          <!-- テーマ切替ボタン（ライト / ダーク） -->
+          <button id="themeToggleBtn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#282a2d] text-gray-600 dark:text-gray-300 transition-colors" title="ライト / ダークモード切替">
+            <i id="themeIcon" data-lucide="moon" class="w-5 h-5"></i>
+          </button>
+
+          <button onclick="alert('【達成度黄緑カラー機能】\n・タスクを完了すると、その日の達成度に応じてカレンダーの日付マスが黄緑色（ライトグリーン〜ライムグリーン）に変化します！\n・年間表示でも日々の達成度が黄緑の草生やし（ヒートマップ）として一目で振り返ることができます！\n\n【ダークモード対応】\n・右上の太陽/月アイコンで背景を黒（ダーク）と白（ライト）にいつでも切り替えられます！')" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#282a2d] text-gray-600 dark:text-gray-300 transition-colors" title="サポート">
             <i data-lucide="help-circle" class="w-5 h-5"></i>
           </button>
 
-          <button id="resetDataBtn" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="データ初期化">
+          <button id="resetDataBtn" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-[#282a2d] text-gray-600 dark:text-gray-300 transition-colors" title="データ初期化">
             <i data-lucide="settings" class="w-5 h-5"></i>
           </button>
 
           <!-- ビュー切替ドロップダウン -->
           <div class="relative">
-            <button id="viewDropdownBtn" class="flex items-center space-x-1.5 px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors ml-1">
+            <button id="viewDropdownBtn" class="flex items-center space-x-1.5 px-3 py-1.5 border border-gray-300 dark:border-[#3c4043] rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#282a2d] transition-colors ml-1">
               <span id="currentViewLabel">月</span>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500"></i>
             </button>
 
-            <div id="viewDropdownMenu" class="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 hidden">
-              <button id="selectMonthView" class="w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 text-[#1a73e8] font-semibold">
+            <div id="viewDropdownMenu" class="absolute right-0 mt-1 w-36 bg-white dark:bg-[#282a2d] border border-gray-200 dark:border-[#3c4043] rounded-lg shadow-lg py-1 z-50 hidden">
+              <button id="selectMonthView" class="w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 dark:hover:bg-[#3c4043] text-[#1a73e8] dark:text-[#8ab4f8] font-semibold">
                 <span>月表示</span>
               </button>
-              <button id="selectYearView" class="w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 text-gray-700">
+              <button id="selectYearView" class="w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 dark:hover:bg-[#3c4043] text-gray-700 dark:text-gray-200">
                 <span>年表示</span>
               </button>
-              <button id="selectCheckListView" class="w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 text-gray-700">
+              <button id="selectCheckListView" class="w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 dark:hover:bg-[#3c4043] text-gray-700 dark:text-gray-200">
                 <span>チェック一覧</span>
               </button>
             </div>
@@ -203,8 +212,8 @@
       </header>
 
       <!-- 月表示コンテナ (黄緑ヒートマップ背景) -->
-      <main id="monthViewContainer" class="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
-        <div class="grid grid-cols-7 border-b border-gray-200 text-center py-2 text-xs font-medium text-gray-500 bg-white">
+      <main id="monthViewContainer" class="flex-1 flex flex-col bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#3c4043] rounded-2xl overflow-hidden shadow-xs">
+        <div class="grid grid-cols-7 border-b border-gray-200 dark:border-[#3c4043] text-center py-2 text-xs font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-[#1e1e1e]">
           <div class="flex justify-center"><span class="text-red-500 font-semibold">日</span></div>
           <div class="flex justify-center"><span>月</span></div>
           <div class="flex justify-center"><span>火</span></div>
@@ -213,23 +222,23 @@
           <div class="flex justify-center"><span>金</span></div>
           <div class="flex justify-center"><span class="text-blue-500">土</span></div>
         </div>
-        <div id="mainCalendarGrid" class="flex-1 grid grid-cols-7 bg-white"></div>
+        <div id="mainCalendarGrid" class="flex-1 grid grid-cols-7 bg-white dark:bg-[#1e1e1e]"></div>
       </main>
 
       <!-- 年表示コンテナ (草生やし年間ヒートマップ) -->
-      <main id="yearViewContainer" class="flex-1 bg-white border border-gray-200 rounded-2xl overflow-y-auto p-4 sm:p-6 shadow-xs hidden">
+      <main id="yearViewContainer" class="flex-1 bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#3c4043] rounded-2xl overflow-y-auto p-4 sm:p-6 shadow-xs hidden">
         <div id="yearCalendarGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 max-w-7xl mx-auto"></div>
       </main>
 
       <!-- チェック一覧コンテナ -->
-      <main id="checkListViewContainer" class="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs p-6 hidden">
-        <div class="flex items-center justify-between pb-4 border-b border-gray-200 mb-4">
+      <main id="checkListViewContainer" class="flex-1 flex flex-col bg-white dark:bg-[#1e1e1e] border border-gray-200 dark:border-[#3c4043] rounded-2xl overflow-hidden shadow-xs p-6 hidden">
+        <div class="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-[#3c4043] mb-4">
           <div>
-            <h2 class="text-lg font-medium text-gray-800 flex items-center gap-2">
-              <i data-lucide="target" class="w-5 h-5 text-[#1a73e8]"></i>
+            <h2 class="text-lg font-medium text-gray-800 dark:text-gray-100 flex items-center gap-2">
+              <i data-lucide="target" class="w-5 h-5 text-[#1a73e8] dark:text-[#8ab4f8]"></i>
               目標・やること進捗一覧
             </h2>
-            <p class="text-xs text-gray-500 mt-0.5">全体の目標と日々の達成状況を一覧で管理できます</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">全体の目標と日々の達成状況を一覧で管理できます</p>
           </div>
           <button id="addFromCheckListBtn" class="flex items-center gap-1.5 px-4 py-2 bg-[#1a73e8] text-white text-xs font-medium rounded-lg hover:bg-[#174ea6] transition-colors shadow-xs">
             <i data-lucide="plus" class="w-4 h-4"></i>
@@ -242,14 +251,14 @@
   </div>
 
   <!-- 目標作成・編集モーダル -->
-  <div id="eventModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100" onclick="event.stopPropagation()">
-      <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-100">
-        <h3 id="modalTitle" class="text-base font-semibold text-gray-800 flex items-center gap-2">
-          <i data-lucide="target" class="w-4 h-4 text-[#1a73e8]"></i>
+  <div id="eventModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-[#282a2d] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100 dark:border-[#3c4043]" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between px-6 py-4 bg-gray-50 dark:bg-[#202124] border-b border-gray-100 dark:border-[#3c4043]">
+        <h3 id="modalTitle" class="text-base font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+          <i data-lucide="target" class="w-4 h-4 text-[#1a73e8] dark:text-[#8ab4f8]"></i>
           目標・やることの設定
         </h3>
-        <button id="modalCloseBtn" class="p-1.5 rounded-full hover:bg-gray-200 text-gray-500 transition-colors">
+        <button id="modalCloseBtn" class="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-[#3c4043] text-gray-500 dark:text-gray-400 transition-colors">
           <i data-lucide="x" class="w-4 h-4"></i>
         </button>
       </div>
@@ -258,65 +267,65 @@
         <input type="hidden" id="eventId">
 
         <!-- ① 全体の目標 -->
-        <div class="bg-blue-50/50 p-3.5 rounded-xl border border-blue-100">
-          <label class="block text-xs font-bold text-[#1a73e8] mb-1 flex items-center gap-1.5">
+        <div class="bg-blue-50/50 dark:bg-blue-950/20 p-3.5 rounded-xl border border-blue-100 dark:border-blue-900/40">
+          <label class="block text-xs font-bold text-[#1a73e8] dark:text-[#8ab4f8] mb-1 flex items-center gap-1.5">
             <i data-lucide="target" class="w-3.5 h-3.5"></i>
-            ① 全体の目標（ゴール） <span className="text-red-500">*</span>
+            ① 全体の目標（ゴール） <span class="text-red-500">*</span>
           </label>
-          <p class="text-[11px] text-gray-500 mb-2">期間全体を通して達成したい最終ゴールを入力してください</p>
-          <input id="overallGoalInput" type="text" required placeholder="例: 英単語ターゲット1900 完走、基本情報過去問3年分制覇" class="w-full px-3.5 py-2.5 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
+          <p class="text-[11px] text-gray-500 dark:text-gray-400 mb-2">期間全体を通して達成したい最終ゴールを入力してください</p>
+          <input id="overallGoalInput" type="text" required placeholder="例: 英単語ターゲット1900 完走、基本情報過去問3年分制覇" class="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-[#1e1e1e] border border-blue-200 dark:border-[#3c4043] text-gray-800 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
         </div>
 
         <!-- ② 1日に達成する目標 -->
-        <div class="bg-emerald-50/50 p-3.5 rounded-xl border border-emerald-100">
-          <label class="block text-xs font-bold text-emerald-700 mb-1 flex items-center gap-1.5">
+        <div class="bg-emerald-50/50 dark:bg-emerald-950/20 p-3.5 rounded-xl border border-emerald-100 dark:border-emerald-900/40">
+          <label class="block text-xs font-bold text-emerald-700 dark:text-emerald-400 mb-1 flex items-center gap-1.5">
             <i data-lucide="flame" class="w-3.5 h-3.5"></i>
             ② 1日に達成する目標（日々のノルマ）
           </label>
-          <p class="text-[11px] text-gray-500 mb-2">カレンダーの各マスに表示され、毎日チェックできる目標です</p>
-          <input id="dailyGoalInput" type="text" placeholder="例: 1日50単語暗記＋復習テスト、1日午前過去問20問解く" class="w-full px-3.5 py-2.5 text-sm bg-white border border-emerald-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600">
+          <p class="text-[11px] text-gray-500 dark:text-gray-400 mb-2">カレンダーの各マスに表示され、毎日チェックできる目標です</p>
+          <input id="dailyGoalInput" type="text" placeholder="例: 1日50単語暗記＋復習テスト、1日午前過去問20問解く" class="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-[#1e1e1e] border border-emerald-200 dark:border-[#3c4043] text-gray-800 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600">
         </div>
 
         <!-- やる期間 -->
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center justify-between">
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5 flex items-center justify-between">
             <span class="flex items-center gap-1">
               <i data-lucide="clock" class="w-3 h-3"></i>
               やる期間（期間指定）
             </span>
-            <span id="periodDaysPreview" class="text-[11px] text-[#1a73e8] font-medium font-mono">1日間</span>
+            <span id="periodDaysPreview" class="text-[11px] text-[#1a73e8] dark:text-[#8ab4f8] font-medium font-mono">1日間</span>
           </label>
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <span class="block text-[11px] text-gray-500 mb-1">開始日</span>
-              <input id="eventStartDateInput" type="date" required class="w-full px-2.5 py-2 text-xs border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
+              <span class="block text-[11px] text-gray-500 dark:text-gray-400 mb-1">開始日</span>
+              <input id="eventStartDateInput" type="date" required class="w-full px-2.5 py-2 text-xs border border-gray-300 dark:border-[#3c4043] bg-white dark:bg-[#1e1e1e] text-gray-800 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
             </div>
             <div>
-              <span class="block text-[11px] text-gray-500 mb-1">終了日</span>
-              <input id="eventEndDateInput" type="date" required class="w-full px-2.5 py-2 text-xs border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
+              <span class="block text-[11px] text-gray-500 dark:text-gray-400 mb-1">終了日</span>
+              <input id="eventEndDateInput" type="date" required class="w-full px-2.5 py-2 text-xs border border-gray-300 dark:border-[#3c4043] bg-white dark:bg-[#1e1e1e] text-gray-800 dark:text-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
             </div>
           </div>
         </div>
 
         <!-- タグ -->
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1">
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5 flex items-center gap-1">
             <i data-lucide="tag" class="w-3 h-3"></i>
             タグ（カテゴリー）
           </label>
           <div class="flex flex-wrap gap-1.5 mb-2">
-            <button type="button" data-tag="勉強" data-color="blue" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-blue-50 border-[#1a73e8] text-[#1a73e8] font-semibold transition-all">📚 勉強</button>
-            <button type="button" data-tag="仕事" data-color="yellow" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 transition-all">💼 仕事</button>
-            <button type="button" data-tag="運動" data-color="green" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 transition-all">🏃 運動</button>
-            <button type="button" data-tag="読書" data-color="purple" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 transition-all">📖 読書</button>
-            <button type="button" data-tag="趣味" data-color="red" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 transition-all">🎨 趣味</button>
+            <button type="button" data-tag="勉強" data-color="blue" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-blue-50 dark:bg-blue-900/30 border-[#1a73e8] text-[#1a73e8] dark:text-[#8ab4f8] font-semibold transition-all">📚 勉強</button>
+            <button type="button" data-tag="仕事" data-color="yellow" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 dark:bg-[#1e1e1e] border-gray-200 dark:border-[#3c4043] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-all">💼 仕事</button>
+            <button type="button" data-tag="運動" data-color="green" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 dark:bg-[#1e1e1e] border-gray-200 dark:border-[#3c4043] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-all">🏃 運動</button>
+            <button type="button" data-tag="読書" data-color="purple" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 dark:bg-[#1e1e1e] border-gray-200 dark:border-[#3c4043] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-all">📖 読書</button>
+            <button type="button" data-tag="趣味" data-color="red" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 dark:bg-[#1e1e1e] border-gray-200 dark:border-[#3c4043] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-all">🎨 趣味</button>
           </div>
-          <input id="eventTagInput" type="text" value="勉強" placeholder="または自由入力（例: 資格対策、プログラミング）" class="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#1a73e8]">
+          <input id="eventTagInput" type="text" value="勉強" placeholder="または自由入力（例: 資格対策、プログラミング）" class="w-full px-3 py-1.5 text-xs border border-gray-200 dark:border-[#3c4043] bg-white dark:bg-[#1e1e1e] text-gray-800 dark:text-gray-100 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#1a73e8]">
         </div>
 
         <!-- カラー -->
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">タグカラー</label>
+          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5">タグカラー</label>
           <div class="flex items-center gap-3" id="colorPickerGroup">
             <button type="button" data-color="blue" class="color-btn w-7 h-7 rounded-full bg-[#1a73e8] ring-2 ring-offset-2 ring-blue-500 scale-125 transition-all"></button>
             <button type="button" data-color="green" class="color-btn w-7 h-7 rounded-full bg-[#137333] transition-all"></button>
@@ -326,13 +335,13 @@
           </div>
         </div>
 
-        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-          <button type="button" id="deleteEventBtn" class="hidden items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg">
+        <div class="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#3c4043]">
+          <button type="button" id="deleteEventBtn" class="hidden items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             削除
           </button>
           <div class="flex items-center space-x-2 ml-auto">
-            <button type="button" id="modalCancelBtn" class="px-4 py-2 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-xl">キャンセル</button>
+            <button type="button" id="modalCancelBtn" class="px-4 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#3c4043] rounded-xl">キャンセル</button>
             <button type="submit" class="px-5 py-2 text-xs font-medium bg-[#1a73e8] hover:bg-[#174ea6] text-white rounded-xl shadow-xs">保存</button>
           </div>
         </div>
@@ -425,6 +434,45 @@
       updateProgress();
     }
 
+    // テーマ設定（ライト / ダーク）
+    let currentTheme = 'light';
+    try {
+      currentTheme = localStorage.getItem('check_calendar_theme') || 'light';
+    } catch(e) {
+      currentTheme = 'light';
+    }
+
+    function applyTheme(theme) {
+      currentTheme = theme;
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        document.body.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        document.body.classList.remove('dark');
+      }
+      try {
+        localStorage.setItem('check_calendar_theme', theme);
+      } catch(e) {}
+      updateThemeButton();
+    }
+
+    function toggleTheme() {
+      applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+      renderView();
+    }
+
+    function updateThemeButton() {
+      const icon = document.getElementById('themeIcon');
+      if (!icon) return;
+      if (currentTheme === 'dark') {
+        icon.setAttribute('data-lucide', 'sun');
+      } else {
+        icon.setAttribute('data-lucide', 'moon');
+      }
+      lucide.createIcons();
+    }
+
     let currentYear = 2026;
     let currentMonth = 11;
     let selectedDate = '2026-11-01';
@@ -458,30 +506,38 @@
       return { hasTask: true, total: tasksOnDate.length, completed, rate: completed / tasksOnDate.length };
     }
 
-    // 月表示用セル背景色クラス
+    // 月表示用セル背景色クラス（ライト / ダーク対応）
     function getMonthCellBgClass(dateKey) {
+      const isDark = currentTheme === 'dark';
       const ach = getDayAchievement(dateKey);
-      if (!ach.hasTask || ach.rate === 0) return 'bg-white';
-      if (ach.rate === 1.0) return 'bg-[#d9f99d]/75 border-lime-300';
-      if (ach.rate >= 0.5) return 'bg-[#ecfccb]/70 border-lime-200';
-      return 'bg-[#f7fee7]/70 border-lime-100';
+      if (!ach.hasTask || ach.rate === 0) {
+        return isDark ? 'bg-[#1e1e1e]' : 'bg-white';
+      }
+      if (ach.rate === 1.0) {
+        return isDark ? 'bg-[#1b4721]/90 border-emerald-500/50' : 'bg-[#d9f99d]/75 border-lime-300';
+      }
+      if (ach.rate >= 0.5) {
+        return isDark ? 'bg-[#143d1a]/80 border-emerald-600/40' : 'bg-[#ecfccb]/70 border-lime-200';
+      }
+      return isDark ? 'bg-[#0f2e14]/70 border-emerald-700/30' : 'bg-[#f7fee7]/70 border-lime-100';
     }
 
-    // 年表示用日付スタイル
+    // 年表示用日付スタイル（ライト / ダーク対応）
     function getYearDayStyle(dateKey, isCurrent, isSun, isHol, isToday, isSelected) {
+      const isDark = currentTheme === 'dark';
       if (isToday) return 'bg-[#1a73e8] text-white font-medium shadow-xs';
-      if (isSelected) return 'bg-[#d2e3fc] text-[#174ea6] font-medium';
+      if (isSelected) return isDark ? 'bg-[#174ea6] text-white font-medium' : 'bg-[#d2e3fc] text-[#174ea6] font-medium';
 
       const ach = getDayAchievement(dateKey);
       if (ach.hasTask && ach.rate > 0) {
-        if (ach.rate === 1.0) return 'bg-[#84cc16] text-white font-bold shadow-xs';
-        if (ach.rate >= 0.5) return 'bg-[#bef264] text-lime-900 font-semibold';
-        return 'bg-[#d9f99d] text-lime-800 font-medium';
+        if (ach.rate === 1.0) return isDark ? 'bg-[#2ea043] text-white font-bold shadow-xs' : 'bg-[#84cc16] text-white font-bold shadow-xs';
+        if (ach.rate >= 0.5) return isDark ? 'bg-[#238636] text-white font-semibold' : 'bg-[#bef264] text-lime-900 font-semibold';
+        return isDark ? 'bg-[#0e4429] text-gray-200 font-medium' : 'bg-[#d9f99d] text-lime-800 font-medium';
       }
 
-      if (!isCurrent) return 'text-gray-300 hover:bg-gray-50';
-      if (isSun || isHol) return 'text-red-600 font-semibold hover:bg-red-50';
-      return 'text-gray-800 hover:bg-gray-100';
+      if (!isCurrent) return isDark ? 'text-gray-600 hover:bg-[#282a2d]' : 'text-gray-300 hover:bg-gray-50';
+      if (isSun || isHol) return 'text-red-500 font-semibold hover:bg-red-500/10';
+      return isDark ? 'text-gray-300 hover:bg-[#303134]' : 'text-gray-800 hover:bg-gray-100';
     }
 
     function getAllEvents(y) {
@@ -560,6 +616,7 @@
     }
 
     function renderMainCalendar(holidays) {
+      const isDark = currentTheme === 'dark';
       document.getElementById('miniMonthTitle').textContent = `${currentYear}年 ${currentMonth}月`;
       const mainGrid = document.getElementById('mainCalendarGrid');
       mainGrid.innerHTML = '';
@@ -590,7 +647,7 @@
         days.push({ dateKey: k, display: d === 1 ? `${nextDate.getMonth() + 1}月1日` : `${d}`, isCurrent: false, dayNum: d, isHol: !!holidays[k] });
       }
 
-      mainGrid.className = `flex-1 grid grid-cols-7 ${totalSlots > 35 ? 'grid-rows-6' : 'grid-rows-5'} bg-white`;
+      mainGrid.className = `flex-1 grid grid-cols-7 ${totalSlots > 35 ? 'grid-rows-6' : 'grid-rows-5'} bg-white dark:bg-[#1e1e1e]`;
 
       days.forEach((cell, idx) => {
         const isColRight = (idx + 1) % 7 !== 0;
@@ -602,8 +659,8 @@
 
         const cellDiv = document.createElement('div');
         cellDiv.className = `flex flex-col p-1 relative group transition-colors cursor-pointer overflow-hidden ${bgClass} ${
-          isColRight ? 'border-r border-gray-200' : ''
-        } ${isRowBottom ? 'border-b border-gray-200' : ''} ${
+          isColRight ? (isDark ? 'border-r border-[#2f3336]' : 'border-r border-gray-200') : ''
+        } ${isRowBottom ? (isDark ? 'border-b border-[#2f3336]' : 'border-b border-gray-200') : ''} ${
           selectedDate === cell.dateKey ? 'ring-2 ring-inset ring-blue-500' : ''
         } hover:brightness-98`;
 
@@ -618,14 +675,14 @@
           dayNumHtml = `<div class="w-6 h-6 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-xs font-medium shadow-xs">${cell.dayNum}</div>`;
         } else {
           const colIdx = idx % 7;
-          let textColor = cell.isCurrent ? (isSunOrHol ? 'text-red-600 font-semibold' : colIdx === 6 ? 'text-blue-600' : 'text-gray-800') : 'text-gray-400 font-light';
+          let textColor = cell.isCurrent ? (isSunOrHol ? 'text-red-500 font-semibold' : colIdx === 6 ? 'text-blue-500' : (isDark ? 'text-gray-200' : 'text-gray-800')) : (isDark ? 'text-gray-600 font-light' : 'text-gray-400 font-light');
           dayNumHtml = `<span class="text-xs ${textColor}">${cell.display}</span>`;
         }
 
         const dateHeader = document.createElement('div');
         dateHeader.className = 'flex justify-between items-center h-6 px-1 mb-1 shrink-0';
 
-        const badgeLeft = ach.hasTask ? `<span class="text-[9px] font-bold px-1 rounded-sm ${ach.rate === 1.0 ? 'bg-[#84cc16] text-white' : ach.rate > 0 ? 'bg-lime-200 text-lime-900' : 'text-gray-400'}">${ach.completed}/${ach.total}</span>` : '<div class="w-4"></div>';
+        const badgeLeft = ach.hasTask ? `<span class="text-[9px] font-bold px-1 rounded-sm ${ach.rate === 1.0 ? 'bg-[#84cc16] text-white' : ach.rate > 0 ? (isDark ? 'bg-emerald-800 text-emerald-100' : 'bg-lime-200 text-lime-900') : (isDark ? 'text-gray-500' : 'text-gray-400')}">${ach.completed}/${ach.total}</span>` : '<div class="w-4"></div>';
         const starRight = (ach.hasTask && ach.rate === 1.0) ? '<span class="text-[10px]" title="全タスク達成！">🌟</span>' : '<div class="w-4"></div>';
 
         dateHeader.innerHTML = `${badgeLeft}${dayNumHtml}${starRight}`;
@@ -659,21 +716,23 @@
 
           const evEl = document.createElement('div');
           evEl.className = `flex flex-col p-1 text-[11px] leading-tight font-normal rounded shadow-xs transition-all cursor-pointer border ${
-            isDailyDone ? 'bg-lime-50/90 border-lime-300 text-gray-500' : `${c.bg} text-white ${c.border}`
+            isDailyDone
+              ? (isDark ? 'bg-emerald-950/40 border-emerald-800/60 text-gray-400' : 'bg-lime-50/90 border-lime-300 text-gray-500')
+              : `${c.bg} text-white ${c.border}`
           } hover:brightness-95`;
           evEl.title = `【全体の目標】${ev.overallGoal}\n【1日の目標】${ev.dailyGoal || 'なし'}`;
 
           const displayTarget = ev.dailyGoal ? ev.dailyGoal : ev.overallGoal;
-          const subTargetHtml = ev.dailyGoal ? `<div class="text-[9px] truncate pl-4.5 mt-0.5 flex items-center gap-1 ${isDailyDone ? 'text-gray-400' : 'text-white/80'}"><span class="truncate">🎯 ${ev.overallGoal}</span></div>` : '';
+          const subTargetHtml = ev.dailyGoal ? `<div class="text-[9px] truncate pl-4.5 mt-0.5 flex items-center gap-1 ${isDailyDone ? (isDark ? 'text-gray-500' : 'text-gray-400') : 'text-white/80'}"><span class="truncate">🎯 ${ev.overallGoal}</span></div>` : '';
 
           evEl.innerHTML = `
             <div class="flex items-center gap-1">
               <button class="w-3.5 h-3.5 rounded flex items-center justify-center border shrink-0 transition-colors ${
-                isDailyDone ? 'bg-[#84cc16] border-[#84cc16] text-white shadow-2xs' : 'bg-white/20 border-white/80 hover:bg-white/40 text-white'
+                isDailyDone ? 'bg-[#84cc16] dark:bg-[#2ea043] border-[#84cc16] dark:border-[#2ea043] text-white shadow-2xs' : 'bg-white/20 border-white/80 hover:bg-white/40 text-white'
               }" onclick="event.stopPropagation(); toggleDailyComplete('${ev.id}', '${cell.dateKey}')">
                 ${isDailyDone ? '<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
               </button>
-              <span class="truncate font-medium ${isDailyDone ? 'line-through text-gray-500' : 'text-white'}">${displayTarget}</span>
+              <span class="truncate font-medium ${isDailyDone ? (isDark ? 'line-through text-gray-400' : 'line-through text-gray-500') : 'text-white'}">${displayTarget}</span>
             </div>
             ${subTargetHtml}
           `;
@@ -701,14 +760,14 @@
         const header = document.createElement('div');
         header.className = 'mb-2';
         header.innerHTML = `
-          <button class="text-sm font-semibold text-gray-800 hover:text-[#1a73e8] transition-colors" onclick="switchToMonth(${m})">
+          <button class="text-sm font-semibold text-gray-800 dark:text-gray-100 hover:text-[#1a73e8] dark:hover:text-[#8ab4f8] transition-colors" onclick="switchToMonth(${m})">
             ${m}月
           </button>
         `;
         monthCard.appendChild(header);
 
         const weekRow = document.createElement('div');
-        weekRow.className = 'grid grid-cols-7 text-center mb-1 text-[11px] font-medium text-gray-500';
+        weekRow.className = 'grid grid-cols-7 text-center mb-1 text-[11px] font-medium text-gray-500 dark:text-gray-400';
         weekDayNames.forEach(d => {
           const col = document.createElement('div');
           col.className = 'py-0.5';
@@ -746,180 +805,188 @@
     }
 
     function renderCheckList() {
+      const isDark = currentTheme === 'dark';
       const container = document.getElementById('checkListGrid');
       container.innerHTML = '';
 
       if (userEvents.length === 0) {
         container.innerHTML = `
-          <div class="h-48 flex flex-col items-center justify-center text-gray-400">
-            <i data-lucide="check-square" class="w-8 h-8 mb-2 stroke-1"></i>
-            <p class="text-sm">登録されている目標はありません</p>
+          <div class="text-center py-16 text-gray-400 dark:text-gray-500">
+            <i data-lucide="calendar" class="w-12 h-12 mx-auto mb-2 opacity-50"></i>
+            <p class="text-sm">登録されている目標・やることはまだありません</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">「新規目標を追加」ボタンから学習・運動・仕事の目標を立ててみましょう！</p>
           </div>
         `;
         lucide.createIcons();
         return;
       }
 
-      userEvents.forEach(t => {
-        const totalDays = calculateDaysCount(t.startDate, t.endDate);
-        const doneDaysCount = Object.values(t.completedDates || {}).filter(Boolean).length;
-        const percent = Math.round((doneDaysCount / totalDays) * 100);
+      userEvents.forEach(ev => {
+        const c = colorClasses[ev.color] || colorClasses.blue;
+        const totalDays = calculateDaysCount(ev.startDate, ev.endDate);
+        const doneDays = Object.keys(ev.completedDates || {}).length;
+        const progressRate = totalDays > 0 ? Math.round((doneDays / totalDays) * 100) : 0;
 
-        const item = document.createElement('div');
-        item.className = 'p-4 rounded-xl border border-gray-200 bg-white shadow-xs hover:border-blue-300 transition-all';
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-xl border transition-all ${
+          progressRate === 100
+            ? (isDark ? 'bg-emerald-950/20 border-emerald-800/50' : 'bg-lime-50/40 border-lime-200')
+            : (isDark ? 'bg-[#282a2d] border-[#3c4043]' : 'bg-white border-gray-200')
+        } hover:shadow-xs`;
 
-        item.innerHTML = `
+        const tagBadge = `<span class="text-[11px] px-2 py-0.5 rounded-full font-medium ${c.bg} text-white">${ev.tag || '勉強'}</span>`;
+
+        card.innerHTML = `
           <div class="flex items-start justify-between">
             <div class="space-y-1">
               <div class="flex items-center gap-2">
-                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-[#1a73e8] uppercase tracking-wider">全体の目標</span>
-                <span class="text-base font-bold text-gray-800">${t.overallGoal}</span>
-                ${t.tag ? `<span class="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">#${t.tag}</span>` : ''}
+                ${tagBadge}
+                <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">${ev.overallGoal}</h3>
+                ${progressRate === 100 ? '<span class="text-xs px-2 py-0.5 rounded-full bg-[#84cc16] dark:bg-[#2ea043] text-white font-medium">全日達成！🎉</span>' : ''}
               </div>
-              ${t.dailyGoal ? `
-                <div class="flex items-center gap-2 text-sm text-gray-700 pl-1 mt-1">
-                  <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">1日の目標</span>
-                  <span class="font-medium text-gray-800">${t.dailyGoal}</span>
-                </div>
-              ` : ''}
-              <div class="flex items-center gap-4 text-xs text-gray-500 pt-1 pl-1">
-                <span class="flex items-center gap-1">
-                  <i data-lucide="clock" class="w-3.5 h-3.5 text-gray-400"></i>
-                  <span>期間: ${t.startDate} 〜 ${t.endDate} (${totalDays}日間)</span>
-                </span>
-                <span class="flex items-center gap-1 font-semibold text-orange-600">
-                  <i data-lucide="flame" class="w-3.5 h-3.5"></i>
-                  <span>達成状況: ${doneDaysCount} / ${totalDays} 日完了 (${percent}%)</span>
-                </span>
-              </div>
+              ${ev.dailyGoal ? `<p class="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-1.5"><span class="text-emerald-600 dark:text-emerald-400 font-bold">1日のノルマ:</span> ${ev.dailyGoal}</p>` : ''}
+              <p class="text-[11px] text-gray-400 dark:text-gray-400 font-mono">📅 期間: ${ev.startDate} 〜 ${ev.endDate || ev.startDate} (${totalDays}日間)</p>
             </div>
-            <div class="flex items-center gap-1">
-              <button class="edit-btn px-2.5 py-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg text-xs font-medium">編集</button>
-              <button class="delete-btn p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            <div class="flex items-center gap-2">
+              <button class="edit-btn p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors" title="編集">
+                <i data-lucide="settings" class="w-4 h-4"></i>
+              </button>
+              <button class="delete-btn p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors" title="削除">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
             </div>
           </div>
-          <div class="mt-3 w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-            <div class="h-full transition-all duration-300 ${percent === 100 ? 'bg-[#84cc16]' : 'bg-[#1a73e8]'}" style="width: ${percent}%"></div>
+          <div class="mt-3">
+            <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+              <span>進捗状況</span>
+              <span class="font-bold text-gray-700 dark:text-gray-200">${doneDays} / ${totalDays} 日完了 (${progressRate}%)</span>
+            </div>
+            <div class="w-full bg-gray-100 dark:bg-[#1e1e1e] h-2 rounded-full overflow-hidden">
+              <div class="h-full transition-all duration-300 ${progressRate === 100 ? 'bg-[#84cc16] dark:bg-[#2ea043]' : 'bg-[#1a73e8]'}" style="width: ${progressRate}%"></div>
+            </div>
           </div>
         `;
 
-        item.querySelector('.edit-btn').onclick = () => openEditModal(t);
-        item.querySelector('.delete-btn').onclick = () => {
-          userEvents = userEvents.filter(e => e.id !== t.id);
-          saveUserEvents();
-          renderView();
+        card.querySelector('.edit-btn').onclick = () => openEditModal(ev);
+        card.querySelector('.delete-btn').onclick = () => {
+          if (confirm(`「${ev.overallGoal}」を削除しますか？`)) {
+            userEvents = userEvents.filter(x => x.id !== ev.id);
+            saveUserEvents();
+            renderView();
+          }
         };
 
-        container.appendChild(item);
+        container.appendChild(card);
       });
-
       lucide.createIcons();
     }
 
-    window.switchToMonth = function(m) {
-      currentMonth = m;
-      currentView = 'month';
-      renderView();
-    };
-
     function renderMiniCalendar() {
+      const isDark = currentTheme === 'dark';
       const miniGrid = document.getElementById('miniCalendarGrid');
       miniGrid.innerHTML = '';
       const days = generateMonthDays(currentYear, currentMonth);
 
       days.forEach((d, idx) => {
+        const isSun = (idx % 7 === 0);
         const ach = getDayAchievement(d.dateKey);
+
         const btn = document.createElement('button');
-        let style = 'text-gray-400 hover:bg-gray-100';
+        let bgStyle = '';
+        let textColor = d.isCurrent ? (isSun ? 'text-red-500 font-medium' : (isDark ? 'text-gray-200' : 'text-gray-800')) : (isDark ? 'text-gray-600' : 'text-gray-300');
 
         if (d.dateKey === todayKey) {
-          style = 'bg-[#1a73e8] text-white font-medium shadow-xs';
+          bgStyle = 'bg-[#1a73e8] text-white font-medium';
         } else if (d.dateKey === selectedDate) {
-          style = 'bg-[#d2e3fc] text-[#174ea6] font-medium';
+          bgStyle = isDark ? 'bg-[#174ea6] text-white' : 'bg-[#d2e3fc] text-[#174ea6]';
         } else if (ach.hasTask && ach.rate > 0) {
-          style = ach.rate === 1.0 ? 'bg-[#84cc16] text-white font-bold' : 'bg-[#d9f99d] text-lime-800 font-medium';
-        } else if (d.isCurrent) {
-          style = 'text-gray-800 hover:bg-gray-200';
+          bgStyle = ach.rate === 1.0 ? (isDark ? 'bg-[#2ea043] text-white font-bold' : 'bg-[#84cc16] text-white font-bold') : (isDark ? 'bg-[#238636] text-white' : 'bg-[#bef264] text-lime-900');
+        } else {
+          bgStyle = isDark ? 'hover:bg-[#282a2d]' : 'hover:bg-gray-100';
         }
 
-        btn.className = `h-7 w-7 mx-auto my-0.5 rounded-full flex items-center justify-center transition-colors text-[11px] ${style}`;
+        btn.className = `h-6 w-6 mx-auto my-0.5 rounded-full flex items-center justify-center transition-all ${bgStyle} ${textColor}`;
         btn.textContent = d.num;
+
         btn.onclick = () => {
           selectedDate = d.dateKey;
-          const [y, m] = d.dateKey.split('-').map(Number);
-          currentYear = y;
-          currentMonth = m;
-          currentView = 'month';
           renderView();
         };
+
         miniGrid.appendChild(btn);
       });
     }
 
-    function toggleDailyComplete(id, dateKey) {
-      userEvents = userEvents.map(e => {
-        if (e.id === id) {
-          const comp = { ...(e.completedDates || {}) };
-          comp[dateKey] = !comp[dateKey];
-          return { ...e, completedDates: comp };
-        }
-        return e;
-      });
+    function updateProgress() {
+      const totalNormDays = userEvents.reduce((acc, ev) => acc + calculateDaysCount(ev.startDate, ev.endDate), 0);
+      const totalDoneDays = userEvents.reduce((acc, ev) => acc + Object.keys(ev.completedDates || {}).length, 0);
+      const rate = totalNormDays > 0 ? Math.round((totalDoneDays / totalNormDays) * 100) : 0;
+
+      document.getElementById('taskProgressText').textContent = `${totalDoneDays} / ${totalNormDays} 日 (${rate}%)`;
+      document.getElementById('taskProgressBar').style.width = `${rate}%`;
+    }
+
+    function toggleDailyComplete(eventId, dateKey) {
+      const ev = userEvents.find(e => e.id === eventId);
+      if (!ev) return;
+      if (!ev.completedDates) ev.completedDates = {};
+      if (ev.completedDates[dateKey]) {
+        delete ev.completedDates[dateKey];
+      } else {
+        ev.completedDates[dateKey] = true;
+      }
       saveUserEvents();
       renderView();
     }
 
-    function updateProgress() {
-      let targetTotal = 0;
-      let completedTotal = 0;
-      userEvents.forEach(ev => {
-        const days = calculateDaysCount(ev.startDate, ev.endDate);
-        targetTotal += days;
-        const compCount = Object.values(ev.completedDates || {}).filter(Boolean).length;
-        completedTotal += compCount;
-      });
-      document.getElementById('taskProgressText').textContent = `${completedTotal} / ${targetTotal} 日`;
-      document.getElementById('taskProgressBar').style.width = `${targetTotal > 0 ? (completedTotal / targetTotal) * 100 : 0}%`;
+    function switchToMonth(m) {
+      currentMonth = m;
+      currentView = 'month';
+      renderView();
     }
 
+    // モーダル管理
     const modal = document.getElementById('eventModal');
-    function updateDurationPreview() {
-      const start = document.getElementById('eventStartDateInput').value;
-      const end = document.getElementById('eventEndDateInput').value;
-      const days = calculateDaysCount(start, end);
-      document.getElementById('periodDaysPreview').textContent = `${days}日間`;
-    }
+    const form = document.getElementById('eventForm');
+    const deleteBtn = document.getElementById('deleteEventBtn');
+    let editingId = null;
 
-    function openModal(startDate = selectedDate, endDate = selectedDate, tag = '勉強') {
-      document.getElementById('eventId').value = '';
+    function openModal(startDate, endDate, defaultTag = '勉強') {
+      editingId = null;
+      document.getElementById('modalTitle').innerHTML = '<i data-lucide="target" class="w-4 h-4 text-[#1a73e8] dark:text-[#8ab4f8]"></i> 目標・やることの新規登録';
       document.getElementById('overallGoalInput').value = '';
       document.getElementById('dailyGoalInput').value = '';
-      document.getElementById('eventStartDateInput').value = startDate;
-      document.getElementById('eventEndDateInput').value = endDate;
-      document.getElementById('eventTagInput').value = tag;
-      document.getElementById('modalTitle').textContent = '目標・やることの設定';
-      document.getElementById('deleteEventBtn').classList.add('hidden');
-      document.getElementById('deleteEventBtn').classList.remove('flex');
-      selectColor('blue');
-      updateDurationPreview();
+      document.getElementById('eventStartDateInput').value = startDate || todayKey;
+      document.getElementById('eventEndDateInput').value = endDate || startDate || todayKey;
+      document.getElementById('eventTagInput').value = defaultTag;
+      currentColor = 'blue';
+      updateColorPicker();
+      updateTagPresets(defaultTag);
+      updatePeriodPreview();
+      deleteBtn.classList.add('hidden');
+      deleteBtn.classList.remove('flex');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      lucide.createIcons();
     }
 
     function openEditModal(ev) {
-      document.getElementById('eventId').value = ev.id;
+      editingId = ev.id;
+      document.getElementById('modalTitle').innerHTML = '<i data-lucide="target" class="w-4 h-4 text-[#1a73e8] dark:text-[#8ab4f8]"></i> 目標・やることの編集';
       document.getElementById('overallGoalInput').value = ev.overallGoal || ev.title || '';
       document.getElementById('dailyGoalInput').value = ev.dailyGoal || '';
-      document.getElementById('eventStartDateInput').value = ev.startDate || ev.date;
-      document.getElementById('eventEndDateInput').value = ev.endDate || ev.startDate || ev.date;
+      document.getElementById('eventStartDateInput').value = ev.startDate;
+      document.getElementById('eventEndDateInput').value = ev.endDate || ev.startDate;
       document.getElementById('eventTagInput').value = ev.tag || '勉強';
-      document.getElementById('modalTitle').textContent = '目標・やることの編集';
-      document.getElementById('deleteEventBtn').classList.remove('hidden');
-      document.getElementById('deleteEventBtn').classList.add('flex');
-      selectColor(ev.color || 'blue');
-      updateDurationPreview();
+      currentColor = ev.color || 'blue';
+      updateColorPicker();
+      updateTagPresets(ev.tag || '勉強');
+      updatePeriodPreview();
+      deleteBtn.classList.remove('hidden');
+      deleteBtn.classList.add('flex');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      lucide.createIcons();
     }
 
     function closeModal() {
@@ -927,51 +994,89 @@
       modal.classList.remove('flex');
     }
 
-    function selectColor(color) {
-      currentColor = color;
+    function updatePeriodPreview() {
+      const s = document.getElementById('eventStartDateInput').value;
+      const e = document.getElementById('eventEndDateInput').value;
+      const count = calculateDaysCount(s, e);
+      document.getElementById('periodDaysPreview').textContent = `${count}日間`;
+    }
+
+    document.getElementById('eventStartDateInput').onchange = () => {
+      const s = document.getElementById('eventStartDateInput').value;
+      const e = document.getElementById('eventEndDateInput').value;
+      if (s > e) document.getElementById('eventEndDateInput').value = s;
+      updatePeriodPreview();
+    };
+    document.getElementById('eventEndDateInput').onchange = () => {
+      const s = document.getElementById('eventStartDateInput').value;
+      const e = document.getElementById('eventEndDateInput').value;
+      if (e < s) document.getElementById('eventStartDateInput').value = e;
+      updatePeriodPreview();
+    };
+
+    function updateColorPicker() {
       document.querySelectorAll('.color-btn').forEach(btn => {
-        if (btn.dataset.color === color) {
-          btn.className = `color-btn w-7 h-7 rounded-full ${colorClasses[color].bg} ring-2 ring-offset-2 ring-blue-500 scale-125 transition-all`;
+        if (btn.dataset.color === currentColor) {
+          btn.className = `color-btn w-7 h-7 rounded-full bg-[${btn.dataset.color}] ring-2 ring-offset-2 ring-blue-500 scale-125 transition-all`;
         } else {
-          btn.className = `color-btn w-7 h-7 rounded-full ${colorClasses[btn.dataset.color].bg} transition-all hover:scale-110`;
+          btn.className = `color-btn w-7 h-7 rounded-full bg-[${btn.dataset.color}] transition-all`;
         }
       });
     }
 
     document.querySelectorAll('.color-btn').forEach(btn => {
-      btn.onclick = () => selectColor(btn.dataset.color);
-    });
-
-    document.querySelectorAll('.tag-preset-btn').forEach(btn => {
       btn.onclick = () => {
-        document.getElementById('eventTagInput').value = btn.dataset.tag;
-        selectColor(btn.dataset.color);
+        currentColor = btn.dataset.color;
+        updateColorPicker();
       };
     });
 
-    document.getElementById('eventStartDateInput').onchange = (e) => {
-      const endInput = document.getElementById('eventEndDateInput');
-      if (endInput.value < e.target.value) {
-        endInput.value = e.target.value;
-      }
-      updateDurationPreview();
-    };
-    document.getElementById('eventEndDateInput').onchange = updateDurationPreview;
+    function updateTagPresets(selectedTag) {
+      document.querySelectorAll('.tag-preset-btn').forEach(btn => {
+        if (btn.dataset.tag === selectedTag) {
+          btn.className = 'tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-blue-50 dark:bg-blue-900/40 border-[#1a73e8] text-[#1a73e8] dark:text-[#8ab4f8] font-semibold transition-all';
+        } else {
+          btn.className = 'tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 dark:bg-[#1e1e1e] border-gray-200 dark:border-[#3c4043] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-all';
+        }
+      });
+    }
 
-    document.getElementById('eventForm').onsubmit = (e) => {
+    document.querySelectorAll('.tag-preset-btn').forEach(btn => {
+      btn.onclick = () => {
+        const tag = btn.dataset.tag;
+        const color = btn.dataset.color;
+        document.getElementById('eventTagInput').value = tag;
+        currentColor = color;
+        updateColorPicker();
+        updateTagPresets(tag);
+      };
+    });
+
+    form.onsubmit = (e) => {
       e.preventDefault();
-      const id = document.getElementById('eventId').value;
       const overallGoal = document.getElementById('overallGoalInput').value.trim();
       const dailyGoal = document.getElementById('dailyGoalInput').value.trim();
       const startDate = document.getElementById('eventStartDateInput').value;
-      let endDate = document.getElementById('eventEndDateInput').value;
-      if (endDate < startDate) endDate = startDate;
+      const endDate = document.getElementById('eventEndDateInput').value;
       const tag = document.getElementById('eventTagInput').value.trim() || '勉強';
 
       if (!overallGoal) return;
 
-      if (id && !id.startsWith('sys-holiday-')) {
-        userEvents = userEvents.map(ev => ev.id === id ? { ...ev, overallGoal, dailyGoal, startDate, endDate, tag, color: currentColor } : ev);
+      if (editingId) {
+        userEvents = userEvents.map(item => {
+          if (item.id === editingId) {
+            return {
+              ...item,
+              overallGoal,
+              dailyGoal,
+              startDate,
+              endDate,
+              tag,
+              color: currentColor
+            };
+          }
+          return item;
+        });
       } else {
         userEvents.push({
           id: `task-${Date.now()}`,
@@ -981,18 +1086,18 @@
           endDate,
           tag,
           color: currentColor,
-          completedDates: {},
+          completedDates: {}
         });
       }
+
       saveUserEvents();
       closeModal();
       renderView();
     };
 
-    document.getElementById('deleteEventBtn').onclick = () => {
-      const id = document.getElementById('eventId').value;
-      if (id) {
-        userEvents = userEvents.filter(e => e.id !== id);
+    deleteBtn.onclick = () => {
+      if (editingId && confirm('この目標を削除しますか？')) {
+        userEvents = userEvents.filter(x => x.id !== editingId);
         saveUserEvents();
         closeModal();
         renderView();
@@ -1044,7 +1149,7 @@
           if (b.dataset.filter === selectedFilterTag) {
             b.className = 'filter-btn text-[11px] px-2.5 py-1 rounded-full bg-[#1a73e8] text-white font-medium transition-all';
           } else {
-            b.className = 'filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 hover:border-gray-300 transition-all';
+            b.className = 'filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white dark:bg-[#282a2d] border border-gray-200 dark:border-[#3c4043] text-gray-700 dark:text-gray-200 hover:border-gray-300 transition-all';
           }
         });
         renderView();
@@ -1130,6 +1235,11 @@
       }
     };
 
+    // テーマ切替ボタンのイベント登録
+    document.getElementById('themeToggleBtn').onclick = toggleTheme;
+
+    // 初期化
+    applyTheme(currentTheme);
     renderView();
     lucide.createIcons();
   </script>
