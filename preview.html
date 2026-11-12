@@ -26,10 +26,10 @@
 </head>
 <body class="flex flex-col h-screen w-screen overflow-hidden text-[#3c4043] antialiased">
 
-  <!-- ブラウザ風タイトルバー -->
+  <!-- タイトルバー -->
   <div class="bg-[#202124] text-[#e8eaed] text-xs px-3 py-1 flex items-center justify-between select-none shrink-0 border-b border-[#3c4043]/40">
     <span class="font-medium tracking-wide">空のWebサイト</span>
-    <span class="text-[11px] text-gray-400">チェックカレンダー</span>
+    <span class="text-[11px] text-gray-400">チェックカレンダー - やること・勉強・期間管理</span>
   </div>
 
   <div class="flex flex-1 overflow-hidden relative">
@@ -42,20 +42,27 @@
       </div>
 
       <!-- + 作成 ▾ ボタン -->
-      <div class="mb-4 pl-1">
+      <div class="mb-3 pl-1">
         <button id="createEventBtn" class="w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-white border border-gray-200/80 shadow-[0_1px_3px_0_rgba(60,64,67,0.3),0_4px_8px_3px_rgba(60,64,67,0.15)] hover:shadow-[0_2px_6px_2px_rgba(60,64,67,0.3),0_6px_10px_4px_rgba(60,64,67,0.15)] transition-all cursor-pointer group">
           <i data-lucide="plus" class="w-5 h-5 text-[#3c4043] stroke-[2.4]"></i>
-          <span class="text-sm font-medium text-gray-700">作成</span>
+          <span class="text-sm font-medium text-gray-700">やること・勉強を追加</span>
           <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500 ml-auto"></i>
         </button>
       </div>
 
-      <!-- 祝日追加クイックボタン -->
+      <!-- タグフィルター -->
       <div class="mb-4 px-1">
-        <button id="addHolidayQuickBtn" class="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-[#137333] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-colors">
-          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-          <span>祝日・記念日を追加</span>
-        </button>
+        <span class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
+          <i data-lucide="filter" class="w-3 h-3"></i>
+          タグで絞り込み
+        </span>
+        <div id="filterTagGroup" class="flex flex-wrap gap-1">
+          <button data-filter="ALL" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-[#1a73e8] text-white font-medium transition-all">すべて</button>
+          <button data-filter="勉強" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 hover:border-gray-300 transition-all">#勉強</button>
+          <button data-filter="仕事" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 hover:border-gray-300 transition-all">#仕事</button>
+          <button data-filter="運動" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 hover:border-gray-300 transition-all">#運動</button>
+          <button data-filter="読書" class="filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 hover:border-gray-300 transition-all">#読書</button>
+        </div>
       </div>
 
       <!-- ミニカレンダー -->
@@ -86,11 +93,11 @@
       </div>
 
       <!-- 進捗バー -->
-      <div class="mt-auto pt-4 pb-2 border-t border-gray-200/80 px-2">
-        <div class="flex items-center justify-between text-xs font-medium text-gray-600 mb-2">
+      <div class="mt-auto pt-3 pb-2 border-t border-gray-200/80 px-2">
+        <div class="flex items-center justify-between text-xs font-medium text-gray-600 mb-1.5">
           <span class="flex items-center gap-1.5">
             <i data-lucide="check-square" class="w-3.5 h-3.5 text-[#1a73e8]"></i>
-            タスク進捗
+            やること達成率
           </span>
           <span id="taskProgressText" class="text-[11px] bg-blue-50 text-[#1a73e8] px-2 py-0.5 rounded-full">0 / 0 完了</span>
         </div>
@@ -126,12 +133,16 @@
           <h1 id="headerTitle" class="text-xl font-medium text-gray-800 ml-2 tracking-tight">
             2026年 11月
           </h1>
+
+          <div id="activeFilterBadge" class="hidden sm:flex items-center gap-1.5 ml-2 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-full text-xs text-[#1a73e8]">
+            <span id="activeFilterText">絞り込み: #すべて</span>
+          </div>
         </div>
 
         <div class="flex items-center space-x-1 sm:space-x-2">
           <div id="searchContainer" class="hidden items-center bg-gray-100 rounded-full px-3 py-1 border border-gray-300">
             <i data-lucide="search" class="w-4 h-4 text-gray-500 mr-2"></i>
-            <input id="searchInput" type="text" placeholder="予定や祝日を検索..." class="bg-transparent border-none outline-none text-xs text-gray-700 w-36 sm:w-48">
+            <input id="searchInput" type="text" placeholder="やること・タグを検索..." class="bg-transparent border-none outline-none text-xs text-gray-700 w-36 sm:w-48">
             <button id="closeSearchBtn" class="text-gray-400 hover:text-gray-600 ml-1">
               <i data-lucide="x" class="w-3.5 h-3.5"></i>
             </button>
@@ -140,7 +151,7 @@
             <i data-lucide="search" class="w-5 h-5"></i>
           </button>
 
-          <button onclick="alert('【祝日機能について】\n・日本の祝日法に基づき、各年の国民の祝日・振替休日・国民の休日が自動で表示されます。\n・サイドバーの「祝日・記念日を追加」から独自の記念日も登録できます。')" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="サポート">
+          <button onclick="alert('【やること・勉強・期間機能の使い方】\n・「作成」ボタンから、やること・タグ（#勉強など）・やる期間（開始日〜終了日）を登録できます。\n・複数日のやることは帯状の期間バーとして連続表示されます。\n・タスクのチェックボックスで完了/未完了を切り替えられます。')" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="サポート">
             <i data-lucide="help-circle" class="w-5 h-5"></i>
           </button>
 
@@ -162,8 +173,8 @@
               <button id="selectYearView" class="w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 text-gray-700">
                 <span>年表示</span>
               </button>
-              <button id="selectHolidaysView" class="w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 text-gray-700">
-                <span>祝日一覧</span>
+              <button id="selectCheckListView" class="w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 text-gray-700">
+                <span>チェック一覧</span>
               </button>
             </div>
           </div>
@@ -189,33 +200,30 @@
         <div id="yearCalendarGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 max-w-7xl mx-auto"></div>
       </main>
 
-      <!-- 祝日一覧コンテナ -->
-      <main id="holidaysViewContainer" class="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs p-6 hidden">
+      <!-- チェック一覧コンテナ -->
+      <main id="checkListViewContainer" class="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs p-6 hidden">
         <div class="flex items-center justify-between pb-4 border-b border-gray-200 mb-4">
           <div>
-            <h2 id="holidaysViewTitle" class="text-lg font-medium text-gray-800 flex items-center gap-2">
-              <i data-lucide="sparkles" class="w-5 h-5 text-[#137333]"></i>
-              日本の祝日・振替休日一覧
-            </h2>
-            <p class="text-xs text-gray-500 mt-0.5">日本の国民の祝日法に基づき自動計算された年間祝日リストです</p>
+            <h2 class="text-lg font-medium text-gray-800">やること・勉強チェック一覧</h2>
+            <p class="text-xs text-gray-500 mt-0.5">登録したやることの期間と達成状況をまとめて管理できます</p>
           </div>
-          <button id="addHolidayFromListBtn" class="flex items-center gap-1.5 px-4 py-2 bg-[#137333] text-white text-xs font-medium rounded-lg hover:bg-[#0f5c29] transition-colors shadow-xs">
+          <button id="addFromCheckListBtn" class="flex items-center gap-1.5 px-4 py-2 bg-[#1a73e8] text-white text-xs font-medium rounded-lg hover:bg-[#174ea6] transition-colors shadow-xs">
             <i data-lucide="plus" class="w-4 h-4"></i>
-            記念日・独自祝日を追加
+            新規やること追加
           </button>
         </div>
-        <div id="holidaysListGrid" class="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pr-1"></div>
+        <div id="checkListGrid" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
       </main>
     </div>
   </div>
 
-  <!-- イベント作成・編集モーダル -->
+  <!-- やること・勉強・期間・タグ追加・編集モーダル -->
   <div id="eventModal" class="fixed inset-0 bg-black/40 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100" onclick="event.stopPropagation()">
       <div class="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-100">
         <h3 id="modalTitle" class="text-base font-semibold text-gray-800 flex items-center gap-2">
           <i data-lucide="check-square" class="w-4 h-4 text-[#1a73e8]"></i>
-          予定・チェック項目の作成
+          やること・勉強の追加
         </h3>
         <button id="modalCloseBtn" class="p-1.5 rounded-full hover:bg-gray-200 text-gray-500 transition-colors">
           <i data-lucide="x" class="w-4 h-4"></i>
@@ -224,28 +232,49 @@
       <form id="eventForm" class="p-6 space-y-4">
         <input type="hidden" id="eventId">
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">名称・タイトル</label>
-          <input id="eventTitleInput" type="text" required placeholder="例: 会議、買い物、創立記念日" class="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">
+            やること（内容） <span class="text-red-500">*</span>
+          </label>
+          <input id="eventTitleInput" type="text" required placeholder="例: 数学のワーク、英単語暗記、読書、資格試験対策" class="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
         </div>
+
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">日付</label>
-          <input id="eventDateInput" type="date" required class="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1">
+            <i data-lucide="tag" class="w-3 h-3"></i>
+            タグ（カテゴリー）
+          </label>
+          <div class="flex flex-wrap gap-1.5 mb-2" id="presetTagButtons">
+            <button type="button" data-tag="勉強" data-color="blue" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-blue-50 border-[#1a73e8] text-[#1a73e8] font-semibold transition-all">📚 勉強</button>
+            <button type="button" data-tag="仕事" data-color="yellow" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 transition-all">💼 仕事</button>
+            <button type="button" data-tag="運動" data-color="green" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 transition-all">🏃 運動</button>
+            <button type="button" data-tag="読書" data-color="purple" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 transition-all">📖 読書</button>
+            <button type="button" data-tag="趣味" data-color="red" class="tag-preset-btn text-xs px-2.5 py-1 rounded-lg border bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 transition-all">🎨 趣味</button>
+          </div>
+          <input id="eventTagInput" type="text" value="勉強" placeholder="または自由入力（例: プログラミング、宿題）" class="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#1a73e8]">
         </div>
+
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">種類</label>
-          <div class="flex items-center gap-4 text-xs text-gray-700">
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <input type="radio" name="eventTypeRadio" id="typeTaskRadio" checked class="text-[#1a73e8]">
-              <span>通常の予定・ToDo</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <input type="radio" name="eventTypeRadio" id="typeHolidayRadio" class="text-[#137333]">
-              <span>祝日・記念日（グリーン）</span>
-            </label>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center justify-between">
+            <span class="flex items-center gap-1">
+              <i data-lucide="clock" class="w-3 h-3"></i>
+              やる期間（期間指定）
+            </span>
+            <span id="periodDaysPreview" class="text-[11px] text-[#1a73e8] font-medium font-mono">1日間</span>
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <span class="block text-[11px] text-gray-500 mb-1">開始日</span>
+              <input id="eventStartDateInput" type="date" required class="w-full px-2.5 py-2 text-xs border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
+            </div>
+            <div>
+              <span class="block text-[11px] text-gray-500 mb-1">終了日</span>
+              <input id="eventEndDateInput" type="date" required class="w-full px-2.5 py-2 text-xs border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
+            </div>
           </div>
         </div>
+
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1.5">カラー</label>
+          <label class="block text-xs font-semibold text-gray-600 mb-1.5">タグカラー</label>
           <div class="flex items-center gap-3" id="colorPickerGroup">
             <button type="button" data-color="blue" class="color-btn w-7 h-7 rounded-full bg-[#1a73e8] ring-2 ring-offset-2 ring-blue-500 scale-125 transition-all"></button>
             <button type="button" data-color="green" class="color-btn w-7 h-7 rounded-full bg-[#137333] transition-all"></button>
@@ -254,6 +283,7 @@
             <button type="button" data-color="purple" class="color-btn w-7 h-7 rounded-full bg-[#a142f4] transition-all"></button>
           </div>
         </div>
+
         <div class="flex items-center justify-between pt-4 border-t border-gray-100">
           <button type="button" id="deleteEventBtn" class="hidden items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -273,19 +303,22 @@
       return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     }
 
-    // 日本の祝日完全計算関数
+    function calculateDaysCount(start, end) {
+      if (!start || !end) return 1;
+      const d1 = new Date(start);
+      const d2 = new Date(end);
+      const diff = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      return diff > 0 ? diff : 1;
+    }
+
     function getJapaneseHolidays(year) {
       const holidays = {};
-      const add = (m, d, name) => {
-        holidays[formatDateKey(year, m, d)] = name;
-      };
-
+      const add = (m, d, name) => { holidays[formatDateKey(year, m, d)] = name; };
       const getNthMonday = (m, nth) => {
         const firstDay = new Date(year, m - 1, 1).getDay();
         const firstMonday = (8 - firstDay) % 7 || 7;
         return firstMonday + (nth - 1) * 7;
       };
-
       const getVernalEquinoxDay = (y) => Math.floor(20.8431 + 0.242194 * (y - 1980) - Math.floor((y - 1980) / 4));
       const getAutumnEquinoxDay = (y) => Math.floor(23.2488 + 0.242194 * (y - 1980) - Math.floor((y - 1980) / 4));
 
@@ -300,19 +333,16 @@
       add(5, 5, 'こどもの日');
       add(7, getNthMonday(7, 3), '海の日');
       if (year >= 2016) add(8, 11, '山の日');
-
       const keiro = getNthMonday(9, 3);
       const shubun = getAutumnEquinoxDay(year);
       add(9, keiro, '敬老の日');
       add(9, shubun, '秋分の日');
       if (shubun - keiro === 2) add(9, keiro + 1, '国民の休日');
-
       add(10, getNthMonday(10, 2), 'スポーツの日');
       add(11, 3, '文化の日');
       add(11, 15, '七五三');
       add(11, 23, '勤労感謝の日');
 
-      // 振替休日
       const sortedDates = Object.keys(holidays).sort();
       const substitutes = {};
       sortedDates.forEach((dateStr) => {
@@ -334,12 +364,18 @@
       return { ...holidays, ...substitutes };
     }
 
+    // 初期サンプルデータ（やること・勉強・期間）
+    const DEFAULT_TASKS = [
+      { id: 't-1', title: '英単語 ターゲット1900 暗記', startDate: '2026-11-04', endDate: '2026-11-08', tag: '勉強', color: 'blue', isCompleted: false },
+      { id: 't-2', title: '基本情報技術者試験 過去問演習', startDate: '2026-11-16', endDate: '2026-11-20', tag: '勉強', color: 'purple', isCompleted: false },
+    ];
+
     let userEvents = [];
     try {
       const saved = localStorage.getItem('check_calendar_events');
-      userEvents = saved ? JSON.parse(saved) : [];
+      userEvents = saved ? JSON.parse(saved) : DEFAULT_TASKS;
     } catch(e) {
-      userEvents = [];
+      userEvents = DEFAULT_TASKS;
     }
 
     function saveUserEvents() {
@@ -353,7 +389,8 @@
     const todayKey = '2026-11-11';
     let currentColor = 'blue';
     let searchQuery = '';
-    let currentView = 'month'; // 'month' | 'year' | 'holidays'
+    let selectedFilterTag = 'ALL';
+    let currentView = 'month'; // 'month' | 'year' | 'checklist'
 
     const weekDayNames = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -365,16 +402,17 @@
       purple: { bg: 'bg-[#a142f4]', text: 'text-white' },
     };
 
-    function getAllEventsForYear(y) {
+    function getAllEvents(y) {
       const holidays = getJapaneseHolidays(y);
       const list = [...userEvents];
-
       Object.entries(holidays).forEach(([dateStr, name]) => {
-        if (!list.some(e => e.date === dateStr && e.title === name)) {
+        if (!list.some(e => e.startDate === dateStr && e.title === name)) {
           list.push({
             id: `sys-holiday-${dateStr}`,
             title: name,
-            date: dateStr,
+            startDate: dateStr,
+            endDate: dateStr,
+            tag: '祝日',
             color: 'green',
             isCompleted: false,
             isHoliday: true
@@ -423,30 +461,39 @@
     }
 
     function renderView() {
-      const { holidays } = getAllEventsForYear(currentYear);
+      const { holidays } = getAllEvents(currentYear);
 
       if (currentView === 'year') {
         document.getElementById('headerTitle').textContent = `${currentYear}年`;
         document.getElementById('currentViewLabel').textContent = '年';
         document.getElementById('monthViewContainer').classList.add('hidden');
-        document.getElementById('holidaysViewContainer').classList.add('hidden');
+        document.getElementById('checkListViewContainer').classList.add('hidden');
         document.getElementById('yearViewContainer').classList.remove('hidden');
         renderYearCalendar(holidays);
-      } else if (currentView === 'holidays') {
-        document.getElementById('headerTitle').textContent = `${currentYear}年 祝日一覧`;
-        document.getElementById('currentViewLabel').textContent = '祝日一覧';
+      } else if (currentView === 'checklist') {
+        document.getElementById('headerTitle').textContent = `${currentYear}年 やること一覧`;
+        document.getElementById('currentViewLabel').textContent = 'チェック一覧';
         document.getElementById('monthViewContainer').classList.add('hidden');
         document.getElementById('yearViewContainer').classList.add('hidden');
-        document.getElementById('holidaysViewContainer').classList.remove('hidden');
-        renderHolidaysList(holidays);
+        document.getElementById('checkListViewContainer').classList.remove('hidden');
+        renderCheckList();
       } else {
         document.getElementById('headerTitle').textContent = `${currentYear}年 ${currentMonth}月`;
         document.getElementById('currentViewLabel').textContent = '月';
         document.getElementById('yearViewContainer').classList.add('hidden');
-        document.getElementById('holidaysViewContainer').classList.add('hidden');
+        document.getElementById('checkListViewContainer').classList.add('hidden');
         document.getElementById('monthViewContainer').classList.remove('hidden');
         document.getElementById('monthViewContainer').classList.add('flex');
         renderMainCalendar(holidays);
+      }
+
+      // フィルターバッジ表示
+      const badge = document.getElementById('activeFilterBadge');
+      if (selectedFilterTag !== 'ALL') {
+        badge.classList.remove('hidden');
+        document.getElementById('activeFilterText').textContent = `絞り込み: #${selectedFilterTag}`;
+      } else {
+        badge.classList.add('hidden');
       }
 
       renderMiniCalendar();
@@ -458,7 +505,7 @@
       const mainGrid = document.getElementById('mainCalendarGrid');
       mainGrid.innerHTML = '';
 
-      const { list: allList } = getAllEventsForYear(currentYear);
+      const { list: allList } = getAllEvents(currentYear);
 
       const firstDay = new Date(currentYear, currentMonth - 1, 1);
       const startDay = firstDay.getDay();
@@ -493,7 +540,7 @@
         const isSunOrHol = (idx % 7 === 0) || cell.isHol;
 
         const cellDiv = document.createElement('div');
-        cellDiv.className = `flex flex-col p-1.5 relative group hover:bg-blue-50/30 transition-colors cursor-pointer overflow-hidden ${
+        cellDiv.className = `flex flex-col p-1 relative group hover:bg-blue-50/20 transition-colors cursor-pointer overflow-hidden ${
           isColRight ? 'border-r border-gray-200' : ''
         } ${isRowBottom ? 'border-b border-gray-200' : ''} ${
           selectedDate === cell.dateKey ? 'bg-blue-50/20' : ''
@@ -501,7 +548,7 @@
 
         cellDiv.onclick = () => {
           selectedDate = cell.dateKey;
-          openModal(cell.dateKey);
+          openModal(cell.dateKey, cell.dateKey, '勉強');
         };
 
         const isToday = cell.dateKey === todayKey;
@@ -515,24 +562,36 @@
         }
 
         const dateHeader = document.createElement('div');
-        dateHeader.className = 'flex justify-center items-center h-7 mb-1 shrink-0';
+        dateHeader.className = 'flex justify-center items-center h-6 mb-1 shrink-0';
         dateHeader.innerHTML = dayHeaderHtml;
         cellDiv.appendChild(dateHeader);
 
         const eventsContainer = document.createElement('div');
         eventsContainer.className = 'flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar';
 
+        // 期間 (startDate <= cell <= endDate) 判定
         const dayEvents = allList.filter(e => {
-          if (e.date !== cell.dateKey) return false;
-          if (searchQuery && !e.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-          return true;
+          if (searchQuery && !e.title.toLowerCase().includes(searchQuery.toLowerCase()) && !e.tag?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+          if (selectedFilterTag !== 'ALL' && e.tag !== selectedFilterTag) return false;
+          const s = e.startDate;
+          const end = e.endDate || e.startDate;
+          return s <= cell.dateKey && cell.dateKey <= end;
         });
 
         dayEvents.forEach(ev => {
           const c = colorClasses[ev.color] || colorClasses.blue;
+          const isMulti = ev.startDate && ev.endDate && ev.startDate !== ev.endDate;
+          const isStart = cell.dateKey === ev.startDate;
+          const isEnd = cell.dateKey === ev.endDate;
+
           const evEl = document.createElement('div');
-          evEl.className = `flex items-center gap-1.5 text-[11px] leading-tight px-1.5 py-0.5 rounded font-normal truncate shadow-xs transition-all cursor-pointer ${c.bg} ${c.text} ${ev.isCompleted ? 'opacity-50 line-through' : 'hover:brightness-95'}`;
-          evEl.title = ev.title;
+          let roundedClass = 'rounded';
+          if (isMulti) {
+            roundedClass = isStart ? 'rounded-l-md mr-0' : isEnd ? 'rounded-r-md ml-0' : 'rounded-none mx-0';
+          }
+
+          evEl.className = `flex items-center gap-1 text-[11px] leading-tight px-1.5 py-0.5 font-normal truncate shadow-xs transition-all cursor-pointer ${c.bg} ${c.text} ${roundedClass} ${ev.isCompleted ? 'opacity-40 line-through' : 'hover:brightness-95'}`;
+          evEl.title = `${ev.title}${ev.tag ? ` [#${ev.tag}]` : ''}${isMulti ? ` (${ev.startDate}〜${ev.endDate})` : ''}`;
 
           let checkBtnHtml = '';
           if (!ev.isHoliday) {
@@ -543,7 +602,18 @@
             `;
           }
 
-          evEl.innerHTML = `${checkBtnHtml}<span class="truncate">${ev.title}</span>`;
+          let tagBadge = '';
+          if (ev.tag && !ev.isHoliday) {
+            tagBadge = `<span class="text-[9px] bg-black/20 px-1 rounded shrink-0 font-medium">#${ev.tag}</span>`;
+          }
+
+          let durationBadge = '';
+          if (isStart && isMulti) {
+            const count = calculateDaysCount(ev.startDate, ev.endDate);
+            durationBadge = `<span class="text-[9px] opacity-80 shrink-0 ml-auto font-mono">${count}日間</span>`;
+          }
+
+          evEl.innerHTML = `${checkBtnHtml}${tagBadge}<span class="truncate">${ev.title}</span>${durationBadge}`;
           evEl.onclick = (e) => {
             e.stopPropagation();
             openEditModal(ev);
@@ -617,38 +687,70 @@
       }
     }
 
-    function renderHolidaysList(holidays) {
-      document.getElementById('holidaysViewTitle').innerHTML = `
-        <i data-lucide="sparkles" class="w-5 h-5 text-[#137333]"></i>
-        ${currentYear}年の日本の祝日・振替休日一覧
-      `;
-      const grid = document.getElementById('holidaysListGrid');
-      grid.innerHTML = '';
+    function renderCheckList() {
+      const container = document.getElementById('checkListGrid');
+      container.innerHTML = '';
 
-      const list = Object.entries(holidays).sort(([a], [b]) => a.localeCompare(b));
-      list.forEach(([dateStr, name]) => {
+      if (userEvents.length === 0) {
+        container.innerHTML = `
+          <div class="h-48 flex flex-col items-center justify-center text-gray-400">
+            <i data-lucide="check-square" class="w-8 h-8 mb-2 stroke-1"></i>
+            <p class="text-sm">登録されているやることはありません</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      userEvents.forEach(t => {
+        const c = colorClasses[t.color] || colorClasses.blue;
+        const isMulti = t.startDate !== t.endDate;
+        const days = calculateDaysCount(t.startDate, t.endDate);
+
         const item = document.createElement('div');
-        item.className = 'flex items-center justify-between p-3.5 rounded-xl border border-emerald-100 bg-emerald-50/40 hover:bg-emerald-50 hover:border-emerald-300 transition-all cursor-pointer';
+        item.className = `flex items-center justify-between p-3.5 rounded-xl border transition-all ${
+          t.isCompleted
+            ? 'bg-gray-50/60 border-gray-200 text-gray-400'
+            : 'bg-white border-gray-200 shadow-xs hover:border-blue-300'
+        }`;
+
         item.innerHTML = `
-          <div>
-            <span class="text-sm font-semibold text-gray-800">${name}</span>
-            <div class="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
-              <i data-lucide="calendar" class="w-3 h-3 text-[#137333]"></i>
-              <span>${dateStr}</span>
+          <div class="flex items-center gap-3">
+            <button class="w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${
+              t.isCompleted ? 'bg-[#1a73e8] border-[#1a73e8] text-white' : 'border-gray-300 hover:border-gray-400'
+            }" onclick="toggleComplete('${t.id}')">
+              ${t.isCompleted ? '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
+            </button>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold ${t.isCompleted ? 'line-through text-gray-400' : 'text-gray-800'}">${t.title}</span>
+                ${t.tag ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-[#1a73e8] border border-blue-200 font-medium">#${t.tag}</span>` : ''}
+              </div>
+              <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                <span class="flex items-center gap-1">
+                  <i data-lucide="clock" class="w-3 h-3 text-gray-400"></i>
+                  <span>やる期間: ${t.startDate} ${isMulti ? `〜 ${t.endDate} (${days}日間)` : ''}</span>
+                </span>
+                <span class="w-2 h-2 rounded-full ${c.bg}"></span>
+              </div>
             </div>
           </div>
-          <span class="text-[11px] px-2 py-0.5 rounded-full bg-[#137333] text-white font-medium">祝日</span>
+          <div class="flex items-center gap-1">
+            <button class="edit-btn p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg text-xs">編集</button>
+            <button class="delete-btn p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </div>
         `;
-        item.onclick = () => {
-          selectedDate = dateStr;
-          const [y, m] = dateStr.split('-').map(Number);
-          currentYear = y;
-          currentMonth = m;
-          currentView = 'month';
+
+        item.querySelector('.edit-btn').onclick = () => openEditModal(t);
+        item.querySelector('.delete-btn').onclick = () => {
+          userEvents = userEvents.filter(e => e.id !== t.id);
+          saveUserEvents();
           renderView();
         };
-        grid.appendChild(item);
+
+        container.appendChild(item);
       });
+
       lucide.createIcons();
     }
 
@@ -703,20 +805,24 @@
 
     // モーダル操作
     const modal = document.getElementById('eventModal');
-    function openModal(dateStr = selectedDate, isHoliday = false) {
+    function updateDurationPreview() {
+      const start = document.getElementById('eventStartDateInput').value;
+      const end = document.getElementById('eventEndDateInput').value;
+      const days = calculateDaysCount(start, end);
+      document.getElementById('periodDaysPreview').textContent = `${days}日間`;
+    }
+
+    function openModal(startDate = selectedDate, endDate = selectedDate, tag = '勉強') {
       document.getElementById('eventId').value = '';
       document.getElementById('eventTitleInput').value = '';
-      document.getElementById('eventDateInput').value = dateStr;
-      document.getElementById('modalTitle').textContent = isHoliday ? '祝日・記念日の追加' : '予定・チェック項目の作成';
+      document.getElementById('eventStartDateInput').value = startDate;
+      document.getElementById('eventEndDateInput').value = endDate;
+      document.getElementById('eventTagInput').value = tag;
+      document.getElementById('modalTitle').textContent = 'やること・勉強の追加';
       document.getElementById('deleteEventBtn').classList.add('hidden');
       document.getElementById('deleteEventBtn').classList.remove('flex');
-      if (isHoliday) {
-        document.getElementById('typeHolidayRadio').checked = true;
-        selectColor('green');
-      } else {
-        document.getElementById('typeTaskRadio').checked = true;
-        selectColor('blue');
-      }
+      selectColor('blue');
+      updateDurationPreview();
       modal.classList.remove('hidden');
       modal.classList.add('flex');
     }
@@ -724,16 +830,14 @@
     function openEditModal(ev) {
       document.getElementById('eventId').value = ev.id;
       document.getElementById('eventTitleInput').value = ev.title;
-      document.getElementById('eventDateInput').value = ev.date;
-      document.getElementById('modalTitle').textContent = '予定・チェック項目の編集';
+      document.getElementById('eventStartDateInput').value = ev.startDate || ev.date;
+      document.getElementById('eventEndDateInput').value = ev.endDate || ev.startDate || ev.date;
+      document.getElementById('eventTagInput').value = ev.tag || '勉強';
+      document.getElementById('modalTitle').textContent = 'やることの編集';
       document.getElementById('deleteEventBtn').classList.remove('hidden');
       document.getElementById('deleteEventBtn').classList.add('flex');
-      if (ev.isHoliday) {
-        document.getElementById('typeHolidayRadio').checked = true;
-      } else {
-        document.getElementById('typeTaskRadio').checked = true;
-      }
       selectColor(ev.color || 'blue');
+      updateDurationPreview();
       modal.classList.remove('hidden');
       modal.classList.add('flex');
     }
@@ -758,28 +862,44 @@
       btn.onclick = () => selectColor(btn.dataset.color);
     });
 
-    document.getElementById('typeTaskRadio').onchange = () => selectColor('blue');
-    document.getElementById('typeHolidayRadio').onchange = () => selectColor('green');
+    document.querySelectorAll('.tag-preset-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.getElementById('eventTagInput').value = btn.dataset.tag;
+        selectColor(btn.dataset.color);
+      };
+    });
+
+    document.getElementById('eventStartDateInput').onchange = (e) => {
+      const endInput = document.getElementById('eventEndDateInput');
+      if (endInput.value < e.target.value) {
+        endInput.value = e.target.value;
+      }
+      updateDurationPreview();
+    };
+    document.getElementById('eventEndDateInput').onchange = updateDurationPreview;
 
     document.getElementById('eventForm').onsubmit = (e) => {
       e.preventDefault();
       const id = document.getElementById('eventId').value;
       const title = document.getElementById('eventTitleInput').value.trim();
-      const date = document.getElementById('eventDateInput').value;
-      const isHoliday = document.getElementById('typeHolidayRadio').checked;
+      const startDate = document.getElementById('eventStartDateInput').value;
+      let endDate = document.getElementById('eventEndDateInput').value;
+      if (endDate < startDate) endDate = startDate;
+      const tag = document.getElementById('eventTagInput').value.trim() || '勉強';
 
       if (!title) return;
 
       if (id && !id.startsWith('sys-holiday-')) {
-        userEvents = userEvents.map(ev => ev.id === id ? { ...ev, title, date, color: currentColor, isHoliday } : ev);
+        userEvents = userEvents.map(ev => ev.id === id ? { ...ev, title, startDate, endDate, tag, color: currentColor } : ev);
       } else {
         userEvents.push({
-          id: `ev-${Date.now()}`,
+          id: `task-${Date.now()}`,
           title,
-          date,
+          startDate,
+          endDate,
+          tag,
           color: currentColor,
           isCompleted: false,
-          isHoliday
         });
       }
       saveUserEvents();
@@ -799,7 +919,7 @@
 
     // ナビゲーション
     document.getElementById('prevBtn').onclick = () => {
-      if (currentView === 'year' || currentView === 'holidays') {
+      if (currentView === 'year') {
         currentYear--;
       } else {
         currentMonth--;
@@ -809,7 +929,7 @@
     };
 
     document.getElementById('nextBtn').onclick = () => {
-      if (currentView === 'year' || currentView === 'holidays') {
+      if (currentView === 'year') {
         currentYear++;
       } else {
         currentMonth++;
@@ -836,6 +956,21 @@
       renderView();
     };
 
+    // タグフィルター
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.onclick = () => {
+        selectedFilterTag = btn.dataset.filter;
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          if (b.dataset.filter === selectedFilterTag) {
+            b.className = 'filter-btn text-[11px] px-2.5 py-1 rounded-full bg-[#1a73e8] text-white font-medium transition-all';
+          } else {
+            b.className = 'filter-btn text-[11px] px-2.5 py-1 rounded-full bg-white border border-gray-200 text-gray-700 hover:border-gray-300 transition-all';
+          }
+        });
+        renderView();
+      };
+    });
+
     // ドロップダウン
     const dropdownBtn = document.getElementById('viewDropdownBtn');
     const dropdownMenu = document.getElementById('viewDropdownMenu');
@@ -857,8 +992,8 @@
       dropdownMenu.classList.add('hidden');
       renderView();
     };
-    document.getElementById('selectHolidaysView').onclick = () => {
-      currentView = 'holidays';
+    document.getElementById('selectCheckListView').onclick = () => {
+      currentView = 'checklist';
       dropdownMenu.classList.add('hidden');
       renderView();
     };
@@ -879,9 +1014,8 @@
       openBtn.classList.remove('hidden');
     };
 
-    document.getElementById('createEventBtn').onclick = () => openModal(selectedDate, false);
-    document.getElementById('addHolidayQuickBtn').onclick = () => openModal(selectedDate, true);
-    document.getElementById('addHolidayFromListBtn').onclick = () => openModal(selectedDate, true);
+    document.getElementById('createEventBtn').onclick = () => openModal(selectedDate, selectedDate, '勉強');
+    document.getElementById('addFromCheckListBtn').onclick = () => openModal(selectedDate, selectedDate, '勉強');
     document.getElementById('modalCloseBtn').onclick = closeModal;
     document.getElementById('modalCancelBtn').onclick = closeModal;
 
@@ -911,8 +1045,9 @@
     };
 
     document.getElementById('resetDataBtn').onclick = () => {
-      if (confirm('追加したカスタム予定を初期化しますか？（祝日は常に表示されます）')) {
-        userEvents = [];
+      if (confirm('登録したやることデータを初期化しますか？')) {
+        localStorage.removeItem('check_calendar_events');
+        userEvents = DEFAULT_TASKS;
         saveUserEvents();
         renderView();
       }
