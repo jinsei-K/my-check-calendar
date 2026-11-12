@@ -12,47 +12,18 @@ import {
   Check,
   Trash2,
   Calendar as CalendarIcon,
-  CheckSquare
+  CheckSquare,
+  Sparkles
 } from 'lucide-react';
 
 // カラーパレット定義
 const COLOR_OPTIONS = [
-  { id: 'green', name: 'グリーン', bg: 'bg-[#137333]', border: 'border-[#137333]', text: 'text-white' },
+  { id: 'green', name: '祝日・グリーン', bg: 'bg-[#137333]', border: 'border-[#137333]', text: 'text-white' },
   { id: 'blue', name: 'ブルー', bg: 'bg-[#1a73e8]', border: 'border-[#1a73e8]', text: 'text-white' },
   { id: 'red', name: 'レッド', bg: 'bg-[#d93025]', border: 'border-[#d93025]', text: 'text-white' },
   { id: 'yellow', name: 'イエロー', bg: 'bg-[#f9ab00]', border: 'border-[#f9ab00]', text: 'text-[#202124]' },
   { id: 'purple', name: 'パープル', bg: 'bg-[#a142f4]', border: 'border-[#a142f4]', text: 'text-white' },
 ];
-
-// 初期イベント
-const DEFAULT_EVENTS = [
-  { id: 'ev-1', title: '文化の日', date: '2026-11-03', color: 'green', isCompleted: false, isHoliday: true },
-  { id: 'ev-2', title: '七五三', date: '2026-11-15', color: 'green', isCompleted: false, isHoliday: true },
-  { id: 'ev-3', title: '勤労感謝の日', date: '2026-11-23', color: 'green', isCompleted: false, isHoliday: true },
-];
-
-// 日本の祝日データ
-const JAPANESE_HOLIDAYS = {
-  '2026-01-01': '元日',
-  '2026-01-12': '成人の日',
-  '2026-02-11': '建国記念の日',
-  '2026-02-23': '天皇誕生日',
-  '2026-03-20': '春分の日',
-  '2026-04-29': '昭和の日',
-  '2026-05-03': '憲法記念日',
-  '2026-05-04': 'みどりの日',
-  '2026-05-05': 'こどもの日',
-  '2026-05-06': '振替休日',
-  '2026-07-20': '海の日',
-  '2026-08-11': '山の日',
-  '2026-09-21': '敬老の日',
-  '2026-09-22': '国民の休日',
-  '2026-09-23': '秋分の日',
-  '2026-10-12': 'スポーツの日',
-  '2026-11-03': '文化の日',
-  '2026-11-15': '七五三',
-  '2026-11-23': '勤労感謝の日',
-};
 
 function formatDateKey(year, month, day) {
   const m = String(month).padStart(2, '0');
@@ -60,15 +31,111 @@ function formatDateKey(year, month, day) {
   return `${year}-${m}-${d}`;
 }
 
-// 任意年月のカレンダーグリッド（42セル固定）を生成するヘルパー関数
+// 日本の祝日・振替休日・国民の休日・年中行事を動的に完全計算する関数
+function getJapaneseHolidays(year) {
+  const holidays = {};
+
+  const add = (m, d, name) => {
+    const key = formatDateKey(year, m, d);
+    holidays[key] = name;
+  };
+
+  // 第N月曜日を求める (m: 1-12, nth: 1-5)
+  const getNthMonday = (m, nth) => {
+    const firstDay = new Date(year, m - 1, 1).getDay();
+    const firstMonday = (8 - firstDay) % 7 || 7;
+    return firstMonday + (nth - 1) * 7;
+  };
+
+  // 春分の日 (1980〜2099年の略算式)
+  const getVernalEquinoxDay = (y) => {
+    return Math.floor(20.8431 + 0.242194 * (y - 1980) - Math.floor((y - 1980) / 4));
+  };
+
+  // 秋分の日 (1980〜2099年の略算式)
+  const getAutumnEquinoxDay = (y) => {
+    return Math.floor(23.2488 + 0.242194 * (y - 1980) - Math.floor((y - 1980) / 4));
+  };
+
+  // 1月
+  add(1, 1, '元日');
+  add(1, getNthMonday(1, 2), '成人の日');
+
+  // 2月
+  add(2, 11, '建国記念の日');
+  if (year >= 2020) {
+    add(2, 23, '天皇誕生日');
+  }
+
+  // 3月
+  add(3, getVernalEquinoxDay(year), '春分の日');
+
+  // 4月
+  add(4, 29, '昭和の日');
+
+  // 5月
+  add(5, 3, '憲法記念日');
+  add(5, 4, 'みどりの日');
+  add(5, 5, 'こどもの日');
+
+  // 7月
+  add(7, getNthMonday(7, 3), '海の日');
+
+  // 8月
+  if (year >= 2016) {
+    add(8, 11, '山の日');
+  }
+
+  // 9月
+  const keiroDay = getNthMonday(9, 3);
+  add(9, keiroDay, '敬老の日');
+  const shubunDay = getAutumnEquinoxDay(year);
+  add(9, shubunDay, '秋分の日');
+
+  // 国民の休日 (敬老の日と秋分の日に挟まれた日)
+  if (shubunDay - keiroDay === 2) {
+    add(9, keiroDay + 1, '国民の休日');
+  }
+
+  // 10月
+  add(10, getNthMonday(10, 2), 'スポーツの日');
+
+  // 11月
+  add(11, 3, '文化の日');
+  add(11, 15, '七五三'); // 画像に登場する年中行事
+  add(11, 23, '勤労感謝の日');
+
+  // 振替休日計算（祝日が日曜日の場合、その直後の国民の祝日でない平日を振替休日にする）
+  const sortedDates = Object.keys(holidays).sort();
+  const substitutes = {};
+
+  sortedDates.forEach((dateStr) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    if (dateObj.getDay() === 0) { // 日曜日
+      let subDate = new Date(y, m - 1, d + 1);
+      while (true) {
+        const subKey = formatDateKey(subDate.getFullYear(), subDate.getMonth() + 1, subDate.getDate());
+        if (!holidays[subKey] && !substitutes[subKey]) {
+          substitutes[subKey] = '振替休日';
+          break;
+        }
+        subDate.setDate(subDate.getDate() + 1);
+      }
+    }
+  });
+
+  return { ...holidays, ...substitutes };
+}
+
+// 42マスの月グリッド生成ヘルパー
 function generateMonthDays(year, month, selectedDate, todayKey) {
   const firstDay = new Date(year, month - 1, 1);
-  const startDayOfWeek = firstDay.getDay(); // 0(日) - 6(土)
+  const startDayOfWeek = firstDay.getDay();
   const daysInMonth = new Date(year, month, 0).getDate();
   const daysInPrev = new Date(year, month - 1, 0).getDate();
 
   const days = [];
-  // 前月
   for (let i = startDayOfWeek - 1; i >= 0; i--) {
     const d = daysInPrev - i;
     const prevDate = new Date(year, month - 2, d);
@@ -81,7 +148,6 @@ function generateMonthDays(year, month, selectedDate, todayKey) {
       isToday: dateKey === todayKey,
     });
   }
-  // 当月
   for (let d = 1; d <= daysInMonth; d++) {
     const dateKey = formatDateKey(year, month, d);
     days.push({
@@ -92,7 +158,6 @@ function generateMonthDays(year, month, selectedDate, todayKey) {
       isToday: dateKey === todayKey,
     });
   }
-  // 翌月 (42マス固定)
   const remaining = 42 - days.length;
   for (let d = 1; d <= remaining; d++) {
     const nextDate = new Date(year, month, d);
@@ -109,36 +174,34 @@ function generateMonthDays(year, month, selectedDate, todayKey) {
 }
 
 export default function App() {
-  // 現在表示中の基準日（初期値: 2026年11月）
-  const [currentDate, setCurrentDate] = useState(() => new Date(2026, 10, 1));
+  const [currentDate, setCurrentDate] = useState(() => new Date(2026, 10, 1)); // 2026年11月
   const [selectedDate, setSelectedDate] = useState('2026-11-01');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // 表示モード: 'month' (月表示) | 'year' (年表示) | 'check-list' (チェック一覧)
+  // 表示モード: 'month' | 'year' | 'check-list' | 'holidays'
   const [viewMode, setViewMode] = useState('month');
   const [isViewDropdownOpen, setIsViewDropdownOpen] = useState(false);
 
-  // 検索
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-  // イベント
-  const [events, setEvents] = useState(() => {
+  // ユーザー登録イベント（LocalStorage）
+  const [userEvents, setUserEvents] = useState(() => {
     try {
       const saved = localStorage.getItem('check_calendar_events');
-      return saved ? JSON.parse(saved) : DEFAULT_EVENTS;
+      return saved ? JSON.parse(saved) : [];
     } catch (e) {
-      return DEFAULT_EVENTS;
+      return [];
     }
   });
 
   useEffect(() => {
     try {
-      localStorage.setItem('check_calendar_events', JSON.stringify(events));
+      localStorage.setItem('check_calendar_events', JSON.stringify(userEvents));
     } catch (e) {
       console.error(e);
     }
-  }, [events]);
+  }, [userEvents]);
 
   // モーダル
   const [modalMode, setModalMode] = useState(null);
@@ -147,14 +210,54 @@ export default function App() {
     title: '',
     date: '2026-11-11',
     color: 'blue',
-    isTask: true,
+    isHoliday: false,
   });
 
   const todayKey = '2026-11-11';
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1;
 
-  // ナビゲーション処理
+  // 当年の祝日データを自動算出
+  const yearHolidays = useMemo(() => {
+    return getJapaneseHolidays(currentYear);
+  }, [currentYear]);
+
+  // 全イベント（自動計算祝日 + ユーザー登録イベント）のマージ
+  const allEvents = useMemo(() => {
+    const list = [...userEvents];
+
+    // 自動計算祝日を追加
+    Object.entries(yearHolidays).forEach(([dateStr, name]) => {
+      // ユーザーイベントと重複していなければ追加
+      if (!list.some(e => e.date === dateStr && e.title === name)) {
+        list.push({
+          id: `sys-holiday-${dateStr}`,
+          title: name,
+          date: dateStr,
+          color: 'green',
+          isCompleted: false,
+          isHoliday: true,
+        });
+      }
+    });
+
+    return list;
+  }, [userEvents, yearHolidays]);
+
+  // 日付ごとのイベント辞書
+  const eventsByDate = useMemo(() => {
+    const map = {};
+    allEvents.forEach((ev) => {
+      if (searchQuery.trim() && !ev.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return;
+      }
+      if (!map[ev.date]) map[ev.date] = [];
+      map[ev.date].push(ev);
+    });
+    return map;
+  }, [allEvents, searchQuery]);
+
+  // ナビゲーション
   const handlePrev = () => {
     if (viewMode === 'year') {
       setCurrentDate(new Date(currentYear - 1, currentMonth - 1, 1));
@@ -176,7 +279,7 @@ export default function App() {
     setSelectedDate('2026-11-11');
   };
 
-  // メイン月カレンダーのグリッド
+  // メイン月グリッド
   const calendarGrid = useMemo(() => {
     const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1);
     const startDayOfWeek = firstDayOfMonth.getDay();
@@ -196,6 +299,7 @@ export default function App() {
         display: d === 1 ? `${prevDate.getMonth() + 1}月1日` : `${d}`,
         isCurrentMonth: false,
         isToday: dateKey === todayKey,
+        isHoliday: !!yearHolidays[dateKey],
       });
     }
 
@@ -209,6 +313,7 @@ export default function App() {
         display: d === 1 ? `${currentMonth}月1日` : `${d}`,
         isCurrentMonth: true,
         isToday: dateKey === todayKey,
+        isHoliday: !!yearHolidays[dateKey],
       });
     }
 
@@ -225,18 +330,19 @@ export default function App() {
         display: d === 1 ? `${nextDate.getMonth() + 1}月1日` : `${d}`,
         isCurrentMonth: false,
         isToday: dateKey === todayKey,
+        isHoliday: !!yearHolidays[dateKey],
       });
     }
 
     return days;
-  }, [currentYear, currentMonth, todayKey]);
+  }, [currentYear, currentMonth, todayKey, yearHolidays]);
 
-  // サイドバー用ミニカレンダー
+  // ミニカレンダー
   const miniCalendarGrid = useMemo(() => {
     return generateMonthDays(currentYear, currentMonth, selectedDate, todayKey);
   }, [currentYear, currentMonth, selectedDate, todayKey]);
 
-  // 年表示（Year View）用: 1月〜12月の12か月分のデータ
+  // 年表示データ
   const yearMonthsData = useMemo(() => {
     const months = [];
     for (let m = 1; m <= 12; m++) {
@@ -249,56 +355,24 @@ export default function App() {
     return months;
   }, [currentYear, selectedDate, todayKey]);
 
-  // 日付ごとのイベント
-  const eventsByDate = useMemo(() => {
-    const map = {};
-    events.forEach((ev) => {
-      if (searchQuery.trim() && !ev.title.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return;
-      }
-      if (!map[ev.date]) map[ev.date] = [];
-      map[ev.date].push(ev);
-    });
-
-    Object.entries(JAPANESE_HOLIDAYS).forEach(([dateStr, name]) => {
-      if (searchQuery.trim() && !name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return;
-      }
-      if (!map[dateStr]) map[dateStr] = [];
-      if (!map[dateStr].some(e => e.title === name)) {
-        map[dateStr].unshift({
-          id: `holiday-${dateStr}`,
-          title: name,
-          date: dateStr,
-          color: 'green',
-          isCompleted: false,
-          isHoliday: true,
-        });
-      }
-    });
-
-    return map;
-  }, [events, searchQuery]);
-
-  const handleOpenCreateModal = (targetDate = selectedDate) => {
+  const handleOpenCreateModal = (targetDate = selectedDate, isHoliday = false) => {
     setFormData({
       title: '',
       date: targetDate,
-      color: 'blue',
-      isTask: true,
+      color: isHoliday ? 'green' : 'blue',
+      isHoliday: isHoliday,
     });
     setModalMode('create');
   };
 
   const handleOpenEditModal = (ev, e) => {
     e.stopPropagation();
-    if (ev.isHoliday) return;
     setActiveEvent(ev);
     setFormData({
       title: ev.title,
       date: ev.date,
       color: ev.color || 'blue',
-      isTask: ev.isTask ?? true,
+      isHoliday: !!ev.isHoliday,
     });
     setModalMode('edit');
   };
@@ -314,22 +388,35 @@ export default function App() {
         date: formData.date,
         color: formData.color,
         isCompleted: false,
-        isTask: formData.isTask,
+        isHoliday: formData.isHoliday,
       };
-      setEvents(prev => [...prev, newEv]);
+      setUserEvents(prev => [...prev, newEv]);
     } else if (modalMode === 'edit' && activeEvent) {
-      setEvents(prev => prev.map(ev => {
-        if (ev.id === activeEvent.id) {
-          return {
-            ...ev,
-            title: formData.title.trim(),
-            date: formData.date,
-            color: formData.color,
-            isTask: formData.isTask,
-          };
-        }
-        return ev;
-      }));
+      if (activeEvent.id.startsWith('sys-holiday-')) {
+        // システム祝日をカスタム編集する場合はユーザーイベントに登録
+        const newEv = {
+          id: `custom-holiday-${Date.now()}`,
+          title: formData.title.trim(),
+          date: formData.date,
+          color: formData.color,
+          isCompleted: false,
+          isHoliday: true,
+        };
+        setUserEvents(prev => [...prev, newEv]);
+      } else {
+        setUserEvents(prev => prev.map(ev => {
+          if (ev.id === activeEvent.id) {
+            return {
+              ...ev,
+              title: formData.title.trim(),
+              date: formData.date,
+              color: formData.color,
+              isHoliday: formData.isHoliday,
+            };
+          }
+          return ev;
+        }));
+      }
     }
     setModalMode(null);
     setActiveEvent(null);
@@ -337,14 +424,14 @@ export default function App() {
 
   const handleDeleteEvent = () => {
     if (!activeEvent) return;
-    setEvents(prev => prev.filter(ev => ev.id !== activeEvent.id));
+    setUserEvents(prev => prev.filter(ev => ev.id !== activeEvent.id));
     setModalMode(null);
     setActiveEvent(null);
   };
 
   const handleToggleComplete = (eventId, e) => {
     e.stopPropagation();
-    setEvents(prev => prev.map(ev => {
+    setUserEvents(prev => prev.map(ev => {
       if (ev.id === eventId) {
         return { ...ev, isCompleted: !ev.isCompleted };
       }
@@ -353,14 +440,18 @@ export default function App() {
   };
 
   const weekDayNames = ['日', '月', '火', '水', '木', '金', '土'];
-  const taskEvents = useMemo(() => events.filter(e => !e.isHoliday), [events]);
+  const taskEvents = useMemo(() => allEvents.filter(e => !e.isHoliday), [allEvents]);
+  const holidayList = useMemo(() => {
+    return Object.entries(yearHolidays)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, title]) => ({ date, title }));
+  }, [yearHolidays]);
 
-  // 現在のビュー名
-  const currentViewLabel = viewMode === 'year' ? '年' : viewMode === 'month' ? '月' : 'チェック一覧';
+  const currentViewLabel = viewMode === 'year' ? '年' : viewMode === 'month' ? '月' : viewMode === 'holidays' ? '祝日一覧' : 'チェック一覧';
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#f8fafd] text-[#3c4043] font-sans antialiased">
-      {/* ブラウザ風タイトルバー（画像の「空のWebサイト」） */}
+      {/* ブラウザ風タイトルバー */}
       <div className="bg-[#202124] text-[#e8eaed] text-xs px-3 py-1 flex items-center justify-between select-none shrink-0 border-b border-[#3c4043]/40">
         <span className="font-medium tracking-wide">空のWebサイト</span>
         <div className="flex items-center space-x-2 text-[11px] text-gray-400">
@@ -369,10 +460,10 @@ export default function App() {
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
-        {/* サイドバー（開いているとき表示） */}
+        {/* サイドバー */}
         {isSidebarOpen && (
           <aside className="w-[260px] min-w-[260px] bg-[#f8fafd] flex flex-col pt-3 px-3 z-30 select-none border-r border-gray-200/70 transition-all duration-200 shadow-sm sm:shadow-none">
-            {/* サイドバー最上部: 閉じる✕ボタン */}
+            {/* 閉じる✕ボタン */}
             <div className="flex items-center h-10 mb-2 pl-1">
               <button
                 onClick={() => setIsSidebarOpen(false)}
@@ -384,14 +475,25 @@ export default function App() {
             </div>
 
             {/* + 作成 ▾ ボタン */}
-            <div className="mb-5 pl-1">
+            <div className="mb-4 pl-1 flex items-center gap-2">
               <button
                 onClick={() => handleOpenCreateModal(selectedDate)}
-                className="flex items-center gap-2.5 px-5 py-3 rounded-2xl bg-white border border-gray-200/80 shadow-[0_1px_3px_0_rgba(60,64,67,0.3),0_4px_8px_3px_rgba(60,64,67,0.15)] hover:shadow-[0_2px_6px_2px_rgba(60,64,67,0.3),0_6px_10px_4px_rgba(60,64,67,0.15)] transition-all cursor-pointer group"
+                className="flex-1 flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-white border border-gray-200/80 shadow-[0_1px_3px_0_rgba(60,64,67,0.3),0_4px_8px_3px_rgba(60,64,67,0.15)] hover:shadow-[0_2px_6px_2px_rgba(60,64,67,0.3),0_6px_10px_4px_rgba(60,64,67,0.15)] transition-all cursor-pointer group"
               >
                 <Plus size={20} className="text-[#3c4043] group-hover:rotate-90 transition-transform" strokeWidth={2.4} />
                 <span className="text-sm font-medium text-gray-700">作成</span>
-                <ChevronDown size={14} className="text-gray-500 ml-0.5" />
+                <ChevronDown size={14} className="text-gray-500 ml-auto" />
+              </button>
+            </div>
+
+            {/* 祝日追加クイックボタン */}
+            <div className="mb-4 px-1">
+              <button
+                onClick={() => handleOpenCreateModal(selectedDate, true)}
+                className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-[#137333] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition-colors"
+              >
+                <Sparkles size={14} />
+                <span>祝日・記念日を追加</span>
               </button>
             </div>
 
@@ -419,7 +521,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* ミニカレンダー 曜日ヘッダー */}
               <div className="grid grid-cols-7 text-center mb-1 text-[11px] font-medium text-gray-500">
                 {weekDayNames.map((day, idx) => (
                   <div key={idx} className="py-0.5">
@@ -428,7 +529,6 @@ export default function App() {
                 ))}
               </div>
 
-              {/* ミニカレンダー 日付マス */}
               <div className="grid grid-cols-7 text-center text-xs">
                 {miniCalendarGrid.map((d, idx) => (
                   <button
@@ -455,8 +555,8 @@ export default function App() {
               </div>
             </div>
 
-            {/* サイドバー下部: チェックタスクサマリー */}
-            <div className="mt-6 pt-4 border-t border-gray-200/80 px-2">
+            {/* 進捗バー */}
+            <div className="mt-auto pt-4 pb-2 border-t border-gray-200/80 px-2">
               <div className="flex items-center justify-between text-xs font-medium text-gray-600 mb-2">
                 <span className="flex items-center gap-1.5">
                   <CheckSquare size={14} className="text-[#1a73e8]" />
@@ -478,11 +578,10 @@ export default function App() {
           </aside>
         )}
 
-        {/* メインカレンダー領域 */}
+        {/* メインエリア */}
         <div className="flex-1 flex flex-col h-full overflow-hidden p-3 pl-3">
-          {/* 上部ヘッダー */}
+          {/* ヘッダー */}
           <header className="flex items-center justify-between h-14 px-2 select-none mb-1">
-            {/* 左側: ハンバーガーメニュー / ナビゲーション */}
             <div className="flex items-center space-x-2 sm:space-x-3">
               {!isSidebarOpen && (
                 <button
@@ -495,7 +594,6 @@ export default function App() {
                 </button>
               )}
 
-              {/* 「今日」ボタン */}
               <button
                 onClick={handleGoToday}
                 className="px-4 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
@@ -504,7 +602,6 @@ export default function App() {
                 今日
               </button>
 
-              {/* 前・次ボタン */}
               <div className="flex items-center space-x-1">
                 <button
                   onClick={handlePrev}
@@ -522,13 +619,11 @@ export default function App() {
                 </button>
               </div>
 
-              {/* 年月表示 (年表示なら「2026年」、月表示なら「2026年 11月」) */}
               <h1 className="text-xl font-medium text-gray-800 ml-2 tracking-tight">
                 {viewMode === 'year' ? `${currentYear}年` : `${currentYear}年 ${currentMonth}月`}
               </h1>
             </div>
 
-            {/* 右側: 検索・ヘルプ・設定・表示切替 */}
             <div className="flex items-center space-x-1 sm:space-x-2">
               {isSearchOpen ? (
                 <div className="flex items-center bg-gray-100 rounded-full px-3 py-1 border border-gray-300 animate-in fade-in duration-150">
@@ -537,7 +632,7 @@ export default function App() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="予定やタスクを検索..."
+                    placeholder="予定や祝日を検索..."
                     className="bg-transparent border-none outline-none text-xs text-gray-700 w-36 sm:w-48"
                     autoFocus
                   />
@@ -555,14 +650,14 @@ export default function App() {
                 <button
                   onClick={() => setIsSearchOpen(true)}
                   className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
-                  title="予定を検索"
+                  title="予定・祝日を検索"
                 >
                   <Search size={20} />
                 </button>
               )}
 
               <button
-                onClick={() => alert('【チェックカレンダーの使い方】\n・右上の「月 ▾」ボタンで「年」「月」「チェック一覧」の切り替えができます。\n・年表示では12ヶ月を一覧でき、月や日付をクリックすると月表示にジャンプします。\n・日付マスをクリックして新しい予定やタスクを追加できます。')}
+                onClick={() => alert(`【祝日機能について】\n・日本の国民の祝日（元日、成人の日、春分・秋分、GW、海・山・敬老、文化の日、勤労感謝の日など）および振替休日、国民の休日が年ごとに自動計算されます。\n・サイドバーの「祝日・記念日を追加」ボタンから、独自の祝日や記念日も追加できます。`)}
                 className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
                 title="ヘルプ"
               >
@@ -571,18 +666,18 @@ export default function App() {
 
               <button
                 onClick={() => {
-                  if (confirm('予定データを初期状態（2026年11月）にリセットしますか？')) {
-                    setEvents(DEFAULT_EVENTS);
+                  if (confirm('追加したカスタム予定を初期化しますか？（祝日は自動計算で常に表示されます）')) {
+                    setUserEvents([]);
                     localStorage.removeItem('check_calendar_events');
                   }
                 }}
                 className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
-                title="設定・データ初期化"
+                title="データ初期化"
               >
                 <Settings size={20} />
               </button>
 
-              {/* ビュー切替「月 ▾」/「年 ▾」ドロップダウンボタン */}
+              {/* ドロップダウンメニュー */}
               <div className="relative">
                 <button
                   onClick={() => setIsViewDropdownOpen(prev => !prev)}
@@ -601,7 +696,7 @@ export default function App() {
                       }}
                       className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 ${viewMode === 'month' ? 'font-semibold text-[#1a73e8]' : 'text-gray-700'}`}
                     >
-                      <span>月</span>
+                      <span>月表示</span>
                       {viewMode === 'month' && <Check size={14} />}
                     </button>
                     <button
@@ -611,8 +706,18 @@ export default function App() {
                       }}
                       className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 ${viewMode === 'year' ? 'font-semibold text-[#1a73e8]' : 'text-gray-700'}`}
                     >
-                      <span>年</span>
+                      <span>年表示</span>
                       {viewMode === 'year' && <Check size={14} />}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setViewMode('holidays');
+                        setIsViewDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 ${viewMode === 'holidays' ? 'font-semibold text-[#1a73e8]' : 'text-gray-700'}`}
+                    >
+                      <span>祝日一覧</span>
+                      {viewMode === 'holidays' && <Check size={14} />}
                     </button>
                     <button
                       onClick={() => {
@@ -630,14 +735,14 @@ export default function App() {
             </div>
           </header>
 
-          {/* ビュー切り替えレンダリング */}
+          {/* ビュー描画 */}
           {viewMode === 'month' ? (
-            /* =================== 月表示 (Month View) =================== */
+            /* =================== 月表示 =================== */
             <main className="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
               <div className="grid grid-cols-7 border-b border-gray-200 text-center py-2 text-xs font-medium text-gray-500 bg-white">
                 {weekDayNames.map((day, idx) => (
                   <div key={idx} className="flex justify-center">
-                    <span className={idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-500' : ''}>
+                    <span className={idx === 0 ? 'text-red-500 font-semibold' : idx === 6 ? 'text-blue-500' : ''}>
                       {day}
                     </span>
                   </div>
@@ -650,6 +755,7 @@ export default function App() {
                   const totalRows = calendarGrid.length / 7;
                   const isRowBottomBorder = Math.floor(idx / 7) < totalRows - 1;
                   const dayEvents = eventsByDate[cell.id] || [];
+                  const isSundayOrHoliday = (idx % 7 === 0) || cell.isHoliday;
 
                   return (
                     <div
@@ -673,7 +779,7 @@ export default function App() {
                           <span
                             className={`text-xs ${
                               cell.isCurrentMonth
-                                ? (idx % 7 === 0 ? 'text-red-600' : idx % 7 === 6 ? 'text-blue-600' : 'text-gray-800')
+                                ? (isSundayOrHoliday ? 'text-red-600 font-medium' : idx % 7 === 6 ? 'text-blue-600' : 'text-gray-800')
                                 : 'text-gray-400 font-light'
                             }`}
                           >
@@ -691,7 +797,7 @@ export default function App() {
                               key={ev.id}
                               onClick={(e) => handleOpenEditModal(ev, e)}
                               className={`flex items-center gap-1.5 text-[11px] leading-tight px-1.5 py-0.5 rounded font-normal truncate shadow-xs transition-all cursor-pointer ${
-                                ev.color === 'green' ? 'bg-[#137333] text-white' : `${colorObj.bg} ${colorObj.text}`
+                                ev.color === 'green' ? 'bg-[#137333] text-white hover:bg-[#0f5c29]' : `${colorObj.bg} ${colorObj.text}`
                               } ${ev.isCompleted ? 'opacity-50 line-through' : 'hover:brightness-95'}`}
                               title={ev.title}
                             >
@@ -724,12 +830,11 @@ export default function App() {
               </div>
             </main>
           ) : viewMode === 'year' ? (
-            /* =================== 年表示 (Year View - 添付画像を完全再現) =================== */
+            /* =================== 年表示 =================== */
             <main className="flex-1 bg-white border border-gray-200 rounded-2xl overflow-y-auto p-4 sm:p-6 shadow-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 max-w-7xl mx-auto">
                 {yearMonthsData.map((m) => (
                   <div key={m.monthNum} className="flex flex-col">
-                    {/* 月見出し (クリックでその月の月表示に切り替え) */}
                     <div className="mb-2">
                       <button
                         onClick={() => {
@@ -742,7 +847,6 @@ export default function App() {
                       </button>
                     </div>
 
-                    {/* 曜日ヘッダー */}
                     <div className="grid grid-cols-7 text-center mb-1 text-[11px] font-medium text-gray-500">
                       {weekDayNames.map((day, idx) => (
                         <div key={idx} className="py-0.5">
@@ -751,38 +855,90 @@ export default function App() {
                       ))}
                     </div>
 
-                    {/* 6行×7列の日付グリッド */}
                     <div className="grid grid-cols-7 text-center text-xs">
-                      {m.days.map((d, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => {
-                            setSelectedDate(d.dateKey);
-                            const [y, mon] = d.dateKey.split('-').map(Number);
-                            setCurrentDate(new Date(y, mon - 1, 1));
-                            setViewMode('month');
-                          }}
-                          className={`h-6 w-6 mx-auto my-0.5 rounded-full flex items-center justify-center transition-all text-[11px] ${
-                            d.isToday
-                              ? 'bg-[#1a73e8] text-white font-medium shadow-xs'
-                              : d.isSelected
-                              ? 'bg-[#d2e3fc] text-[#174ea6] font-medium'
-                              : d.isCurrent
-                              ? 'text-gray-800 hover:bg-gray-100'
-                              : 'text-gray-300 hover:bg-gray-50'
-                          }`}
-                          title={d.dateKey}
-                        >
-                          {d.num}
-                        </button>
-                      ))}
+                      {m.days.map((d, idx) => {
+                        const isHol = !!yearHolidays[d.dateKey];
+                        const isSun = (idx % 7 === 0);
+
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setSelectedDate(d.dateKey);
+                              const [y, mon] = d.dateKey.split('-').map(Number);
+                              setCurrentDate(new Date(y, mon - 1, 1));
+                              setViewMode('month');
+                            }}
+                            className={`h-6 w-6 mx-auto my-0.5 rounded-full flex items-center justify-center transition-all text-[11px] ${
+                              d.isToday
+                                ? 'bg-[#1a73e8] text-white font-medium shadow-xs'
+                                : d.isSelected
+                                ? 'bg-[#d2e3fc] text-[#174ea6] font-medium'
+                                : d.isCurrent
+                                ? (isSun || isHol ? 'text-red-600 font-medium hover:bg-red-50' : 'text-gray-800 hover:bg-gray-100')
+                                : 'text-gray-300 hover:bg-gray-50'
+                            }`}
+                            title={`${d.dateKey}${isHol ? ` (${yearHolidays[d.dateKey]})` : ''}`}
+                          >
+                            {d.num}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
               </div>
             </main>
+          ) : viewMode === 'holidays' ? (
+            /* =================== 祝日一覧ビュー =================== */
+            <main className="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs p-6">
+              <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4">
+                <div>
+                  <h2 className="text-lg font-medium text-gray-800 flex items-center gap-2">
+                    <Sparkles size={20} className="text-[#137333]" />
+                    {currentYear}年の日本の祝日・振替休日一覧
+                  </h2>
+                  <p className="text-xs text-gray-500 mt-0.5">日本の国民の祝日法に基づき自動計算された年間祝日リストです</p>
+                </div>
+                <button
+                  onClick={() => handleOpenCreateModal(selectedDate, true)}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-[#137333] text-white text-xs font-medium rounded-lg hover:bg-[#0f5c29] transition-colors shadow-xs"
+                >
+                  <Plus size={16} />
+                  記念日・独自祝日を追加
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pr-1">
+                {holidayList.map((h) => (
+                  <div
+                    key={h.date}
+                    onClick={() => {
+                      setSelectedDate(h.date);
+                      const [y, m] = h.date.split('-').map(Number);
+                      setCurrentDate(new Date(y, m - 1, 1));
+                      setViewMode('month');
+                    }}
+                    className="flex items-center justify-between p-3.5 rounded-xl border border-emerald-100 bg-emerald-50/40 hover:bg-emerald-50 hover:border-emerald-300 transition-all cursor-pointer"
+                  >
+                    <div>
+                      <span className="text-sm font-semibold text-gray-800">
+                        {h.title}
+                      </span>
+                      <div className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
+                        <CalendarIcon size={12} className="text-[#137333]" />
+                        <span>{h.date}</span>
+                      </div>
+                    </div>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#137333] text-white font-medium">
+                      祝日
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </main>
           ) : (
-            /* =================== チェック一覧（ToDo）ビュー =================== */
+            /* =================== チェック一覧（ToDo） =================== */
             <main className="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs p-6">
               <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4">
                 <div>
@@ -880,7 +1036,9 @@ export default function App() {
             <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
                 <CheckSquare size={18} className="text-[#1a73e8]" />
-                {modalMode === 'create' ? '予定・チェック項目の作成' : '予定・チェック項目の編集'}
+                {modalMode === 'create'
+                  ? (formData.isHoliday ? '祝日・記念日の追加' : '予定・チェック項目の作成')
+                  : '予定・チェック項目の編集'}
               </h3>
               <button
                 onClick={() => setModalMode(null)}
@@ -892,13 +1050,13 @@ export default function App() {
 
             <form onSubmit={handleSaveEvent} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">タイトル</label>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">名称・タイトル</label>
                 <input
                   type="text"
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="例: 会議、買い物、課題提出"
+                  placeholder={formData.isHoliday ? "例: 創立記念日、開校記念日" : "例: 会議、買い物、課題提出"}
                   className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent transition-all"
                   autoFocus
                 />
@@ -913,6 +1071,32 @@ export default function App() {
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent transition-all"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">種類</label>
+                <div className="flex items-center gap-4 text-xs text-gray-700">
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="eventType"
+                      checked={!formData.isHoliday}
+                      onChange={() => setFormData({ ...formData, isHoliday: false, color: 'blue' })}
+                      className="text-[#1a73e8]"
+                    />
+                    <span>通常の予定・ToDo</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="eventType"
+                      checked={formData.isHoliday}
+                      onChange={() => setFormData({ ...formData, isHoliday: true, color: 'green' })}
+                      className="text-[#137333]"
+                    />
+                    <span>祝日・記念日（グリーンバッジ）</span>
+                  </label>
+                </div>
               </div>
 
               <div>
