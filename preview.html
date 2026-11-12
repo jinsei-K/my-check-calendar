@@ -29,7 +29,7 @@
   <!-- タイトルバー -->
   <div class="bg-[#202124] text-[#e8eaed] text-xs px-3 py-1 flex items-center justify-between select-none shrink-0 border-b border-[#3c4043]/40">
     <span class="font-medium tracking-wide">空のWebサイト</span>
-    <span class="text-[11px] text-gray-400">チェックカレンダー - 全体の目標 × 1日の目標</span>
+    <span class="text-[11px] text-gray-400">チェックカレンダー - 達成度黄緑ヒートマップ対応</span>
   </div>
 
   <div class="flex flex-1 overflow-hidden relative">
@@ -48,6 +48,23 @@
           <span class="text-sm font-medium text-gray-700">目標・やること追加</span>
           <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-500 ml-auto"></i>
         </button>
+      </div>
+
+      <!-- 達成度カラー凡例 -->
+      <div class="mb-3 px-2 py-2 bg-white/70 border border-gray-200/70 rounded-xl">
+        <span class="text-[10px] font-semibold text-gray-500 block mb-1">
+          その日のタスク達成度
+        </span>
+        <div class="flex items-center justify-between text-[10px] text-gray-500">
+          <span>0%</span>
+          <div class="flex items-center gap-1">
+            <span class="w-3.5 h-3.5 rounded bg-gray-100 border border-gray-200" title="未完了"></span>
+            <span class="w-3.5 h-3.5 rounded bg-[#f7fee7] border border-lime-200" title="一部達成"></span>
+            <span class="w-3.5 h-3.5 rounded bg-[#bef264] border border-lime-300" title="50%以上達成"></span>
+            <span class="w-3.5 h-3.5 rounded bg-[#84cc16] border border-lime-500" title="100%達成！"></span>
+          </div>
+          <span class="text-lime-700 font-bold">100%</span>
+        </div>
       </div>
 
       <!-- タグフィルター -->
@@ -134,8 +151,12 @@
             2026年 11月
           </h1>
 
-          <div id="activeFilterBadge" class="hidden sm:flex items-center gap-1.5 ml-2 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-full text-xs text-[#1a73e8]">
-            <span id="activeFilterText">絞り込み: #すべて</span>
+          <div class="hidden md:flex items-center gap-1.5 ml-3 px-2.5 py-1 bg-white border border-gray-200 rounded-full text-[11px] text-gray-500 shadow-2xs">
+            <span>達成度:</span>
+            <span class="w-2.5 h-2.5 rounded-full bg-gray-200" title="0%"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#d9f99d]" title="一部達成"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#bef264]" title="50%以上"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-[#84cc16]" title="100%達成！"></span>
           </div>
         </div>
 
@@ -151,7 +172,7 @@
             <i data-lucide="search" class="w-5 h-5"></i>
           </button>
 
-          <button onclick="alert('【全体の目標 × 1日に達成する目標の使い方】\n・「作成」から「全体の目標（例: 単語帳1冊走破）」と「1日に達成する目標（例: 1日50単語）」を入力できます。\n・カレンダーの各マスには、その日の「1日に達成する目標」が表示され、チェックボックスで毎日達成チェックができます！')" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="サポート">
+          <button onclick="alert('【達成度黄緑カラー機能】\n・タスクを完了すると、その日の達成度に応じてカレンダーの日付マスが黄緑色（ライトグリーン〜ライムグリーン）に変化します！\n・年間表示でも日々の達成度が黄緑の草生やし（ヒートマップ）として一目で振り返ることができます！')" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors" title="サポート">
             <i data-lucide="help-circle" class="w-5 h-5"></i>
           </button>
 
@@ -181,7 +202,7 @@
         </div>
       </header>
 
-      <!-- 月表示コンテナ -->
+      <!-- 月表示コンテナ (黄緑ヒートマップ背景) -->
       <main id="monthViewContainer" class="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
         <div class="grid grid-cols-7 border-b border-gray-200 text-center py-2 text-xs font-medium text-gray-500 bg-white">
           <div class="flex justify-center"><span class="text-red-500 font-semibold">日</span></div>
@@ -195,7 +216,7 @@
         <div id="mainCalendarGrid" class="flex-1 grid grid-cols-7 bg-white"></div>
       </main>
 
-      <!-- 年表示コンテナ -->
+      <!-- 年表示コンテナ (草生やし年間ヒートマップ) -->
       <main id="yearViewContainer" class="flex-1 bg-white border border-gray-200 rounded-2xl overflow-y-auto p-4 sm:p-6 shadow-xs hidden">
         <div id="yearCalendarGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 max-w-7xl mx-auto"></div>
       </main>
@@ -240,7 +261,7 @@
         <div class="bg-blue-50/50 p-3.5 rounded-xl border border-blue-100">
           <label class="block text-xs font-bold text-[#1a73e8] mb-1 flex items-center gap-1.5">
             <i data-lucide="target" class="w-3.5 h-3.5"></i>
-            ① 全体の目標（ゴール） <span class="text-red-500">*</span>
+            ① 全体の目標（ゴール） <span className="text-red-500">*</span>
           </label>
           <p class="text-[11px] text-gray-500 mb-2">期間全体を通して達成したい最終ゴールを入力してください</p>
           <input id="overallGoalInput" type="text" required placeholder="例: 英単語ターゲット1900 完走、基本情報過去問3年分制覇" class="w-full px-3.5 py-2.5 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a73e8]">
@@ -386,8 +407,9 @@
     }
 
     const DEFAULT_TASKS = [
-      { id: 't-1', overallGoal: '英単語ターゲット1900 完走', dailyGoal: '1日50単語暗記＆確認テスト', startDate: '2026-11-04', endDate: '2026-11-08', tag: '勉強', color: 'blue', completedDates: { '2026-11-04': true, '2026-11-05': true } },
-      { id: 't-2', overallGoal: '基本情報技術者 午前過去問 3年分制覇', dailyGoal: '午前過去問 20問解答＆見直し', startDate: '2026-11-16', endDate: '2026-11-20', tag: '勉強', color: 'purple', completedDates: {} },
+      { id: 't-1', overallGoal: '英単語ターゲット1900 完走', dailyGoal: '1日50単語暗記＆確認テスト', startDate: '2026-11-04', endDate: '2026-11-08', tag: '勉強', color: 'blue', completedDates: { '2026-11-04': true, '2026-11-05': true, '2026-11-06': true } },
+      { id: 't-2', overallGoal: '基本情報技術者 午前過去問 3年分制覇', dailyGoal: '午前過去問 20問解答＆見直し', startDate: '2026-11-16', endDate: '2026-11-20', tag: '勉強', color: 'purple', completedDates: { '2026-11-16': true } },
+      { id: 't-3', overallGoal: '毎日ランニング習慣', dailyGoal: '朝3kmジョギング', startDate: '2026-11-01', endDate: '2026-11-07', tag: '運動', color: 'green', completedDates: { '2026-11-01': true, '2026-11-02': true, '2026-11-03': true, '2026-11-04': true } },
     ];
 
     let userEvents = [];
@@ -410,7 +432,7 @@
     let currentColor = 'blue';
     let searchQuery = '';
     let selectedFilterTag = 'ALL';
-    let currentView = 'month'; // 'month' | 'year' | 'checklist'
+    let currentView = 'month';
 
     const weekDayNames = ['日', '月', '火', '水', '木', '金', '土'];
 
@@ -421,6 +443,46 @@
       yellow: { bg: 'bg-[#f9ab00]', border: 'border-[#f9ab00]', text: 'text-[#202124]' },
       purple: { bg: 'bg-[#a142f4]', border: 'border-[#a142f4]', text: 'text-white' },
     };
+
+    // 日付ごとの達成度を計算（0.0〜1.0）
+    function getDayAchievement(dateKey) {
+      const tasksOnDate = userEvents.filter(ev => {
+        if (ev.isHoliday) return false;
+        const s = ev.startDate;
+        const e = ev.endDate || ev.startDate;
+        return s <= dateKey && dateKey <= e;
+      });
+
+      if (tasksOnDate.length === 0) return { hasTask: false, total: 0, completed: 0, rate: 0 };
+      const completed = tasksOnDate.filter(ev => !!ev.completedDates?.[dateKey]).length;
+      return { hasTask: true, total: tasksOnDate.length, completed, rate: completed / tasksOnDate.length };
+    }
+
+    // 月表示用セル背景色クラス
+    function getMonthCellBgClass(dateKey) {
+      const ach = getDayAchievement(dateKey);
+      if (!ach.hasTask || ach.rate === 0) return 'bg-white';
+      if (ach.rate === 1.0) return 'bg-[#d9f99d]/75 border-lime-300';
+      if (ach.rate >= 0.5) return 'bg-[#ecfccb]/70 border-lime-200';
+      return 'bg-[#f7fee7]/70 border-lime-100';
+    }
+
+    // 年表示用日付スタイル
+    function getYearDayStyle(dateKey, isCurrent, isSun, isHol, isToday, isSelected) {
+      if (isToday) return 'bg-[#1a73e8] text-white font-medium shadow-xs';
+      if (isSelected) return 'bg-[#d2e3fc] text-[#174ea6] font-medium';
+
+      const ach = getDayAchievement(dateKey);
+      if (ach.hasTask && ach.rate > 0) {
+        if (ach.rate === 1.0) return 'bg-[#84cc16] text-white font-bold shadow-xs';
+        if (ach.rate >= 0.5) return 'bg-[#bef264] text-lime-900 font-semibold';
+        return 'bg-[#d9f99d] text-lime-800 font-medium';
+      }
+
+      if (!isCurrent) return 'text-gray-300 hover:bg-gray-50';
+      if (isSun || isHol) return 'text-red-600 font-semibold hover:bg-red-50';
+      return 'text-gray-800 hover:bg-gray-100';
+    }
 
     function getAllEvents(y) {
       const holidays = getJapaneseHolidays(y);
@@ -493,14 +555,6 @@
         renderMainCalendar(holidays);
       }
 
-      const badge = document.getElementById('activeFilterBadge');
-      if (selectedFilterTag !== 'ALL') {
-        badge.classList.remove('hidden');
-        document.getElementById('activeFilterText').textContent = `絞り込み: #${selectedFilterTag}`;
-      } else {
-        badge.classList.add('hidden');
-      }
-
       renderMiniCalendar();
       updateProgress();
     }
@@ -543,13 +597,15 @@
         const totalRows = totalSlots / 7;
         const isRowBottom = Math.floor(idx / 7) < totalRows - 1;
         const isSunOrHol = (idx % 7 === 0) || cell.isHol;
+        const bgClass = getMonthCellBgClass(cell.dateKey);
+        const ach = getDayAchievement(cell.dateKey);
 
         const cellDiv = document.createElement('div');
-        cellDiv.className = `flex flex-col p-1 relative group hover:bg-blue-50/20 transition-colors cursor-pointer overflow-hidden ${
+        cellDiv.className = `flex flex-col p-1 relative group transition-colors cursor-pointer overflow-hidden ${bgClass} ${
           isColRight ? 'border-r border-gray-200' : ''
         } ${isRowBottom ? 'border-b border-gray-200' : ''} ${
-          selectedDate === cell.dateKey ? 'bg-blue-50/20' : ''
-        }`;
+          selectedDate === cell.dateKey ? 'ring-2 ring-inset ring-blue-500' : ''
+        } hover:brightness-98`;
 
         cellDiv.onclick = () => {
           selectedDate = cell.dateKey;
@@ -557,18 +613,22 @@
         };
 
         const isToday = cell.dateKey === todayKey;
-        let dayHeaderHtml = '';
+        let dayNumHtml = '';
         if (isToday) {
-          dayHeaderHtml = `<div class="w-6 h-6 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-xs font-medium shadow-xs">${cell.dayNum}</div>`;
+          dayNumHtml = `<div class="w-6 h-6 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-xs font-medium shadow-xs">${cell.dayNum}</div>`;
         } else {
           const colIdx = idx % 7;
           let textColor = cell.isCurrent ? (isSunOrHol ? 'text-red-600 font-semibold' : colIdx === 6 ? 'text-blue-600' : 'text-gray-800') : 'text-gray-400 font-light';
-          dayHeaderHtml = `<span class="text-xs ${textColor}">${cell.display}</span>`;
+          dayNumHtml = `<span class="text-xs ${textColor}">${cell.display}</span>`;
         }
 
         const dateHeader = document.createElement('div');
-        dateHeader.className = 'flex justify-center items-center h-6 mb-1 shrink-0';
-        dateHeader.innerHTML = dayHeaderHtml;
+        dateHeader.className = 'flex justify-between items-center h-6 px-1 mb-1 shrink-0';
+
+        const badgeLeft = ach.hasTask ? `<span class="text-[9px] font-bold px-1 rounded-sm ${ach.rate === 1.0 ? 'bg-[#84cc16] text-white' : ach.rate > 0 ? 'bg-lime-200 text-lime-900' : 'text-gray-400'}">${ach.completed}/${ach.total}</span>` : '<div class="w-4"></div>';
+        const starRight = (ach.hasTask && ach.rate === 1.0) ? '<span class="text-[10px]" title="全タスク達成！">🌟</span>' : '<div class="w-4"></div>';
+
+        dateHeader.innerHTML = `${badgeLeft}${dayNumHtml}${starRight}`;
         cellDiv.appendChild(dateHeader);
 
         const eventsContainer = document.createElement('div');
@@ -599,7 +659,7 @@
 
           const evEl = document.createElement('div');
           evEl.className = `flex flex-col p-1 text-[11px] leading-tight font-normal rounded shadow-xs transition-all cursor-pointer border ${
-            isDailyDone ? 'bg-gray-100/90 border-gray-300 text-gray-400' : `${c.bg} text-white ${c.border}`
+            isDailyDone ? 'bg-lime-50/90 border-lime-300 text-gray-500' : `${c.bg} text-white ${c.border}`
           } hover:brightness-95`;
           evEl.title = `【全体の目標】${ev.overallGoal}\n【1日の目標】${ev.dailyGoal || 'なし'}`;
 
@@ -609,11 +669,11 @@
           evEl.innerHTML = `
             <div class="flex items-center gap-1">
               <button class="w-3.5 h-3.5 rounded flex items-center justify-center border shrink-0 transition-colors ${
-                isDailyDone ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white/20 border-white/80 hover:bg-white/40 text-white'
+                isDailyDone ? 'bg-[#84cc16] border-[#84cc16] text-white shadow-2xs' : 'bg-white/20 border-white/80 hover:bg-white/40 text-white'
               }" onclick="event.stopPropagation(); toggleDailyComplete('${ev.id}', '${cell.dateKey}')">
                 ${isDailyDone ? '<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
               </button>
-              <span class="truncate font-medium ${isDailyDone ? 'line-through text-gray-400' : 'text-white'}">${displayTarget}</span>
+              <span class="truncate font-medium ${isDailyDone ? 'line-through text-gray-500' : 'text-white'}">${displayTarget}</span>
             </div>
             ${subTargetHtml}
           `;
@@ -664,19 +724,13 @@
         monthDays.forEach((d, idx) => {
           const isHol = !!holidays[d.dateKey];
           const isSun = (idx % 7 === 0);
+          const ach = getDayAchievement(d.dateKey);
+          const dayStyle = getYearDayStyle(d.dateKey, d.isCurrent, isSun, isHol, d.dateKey === todayKey, d.dateKey === selectedDate);
 
           const btn = document.createElement('button');
-          let style = 'text-gray-300 hover:bg-gray-50';
-          if (d.dateKey === todayKey) {
-            style = 'bg-[#1a73e8] text-white font-medium shadow-xs';
-          } else if (d.dateKey === selectedDate) {
-            style = 'bg-[#d2e3fc] text-[#174ea6] font-medium';
-          } else if (d.isCurrent) {
-            style = (isSun || isHol) ? 'text-red-600 font-semibold hover:bg-red-50' : 'text-gray-800 hover:bg-gray-100';
-          }
-
-          btn.className = `h-6 w-6 mx-auto my-0.5 rounded-full flex items-center justify-center transition-all text-[11px] ${style}`;
+          btn.className = `h-6 w-6 mx-auto my-0.5 rounded-full flex items-center justify-center transition-all text-[11px] ${dayStyle}`;
           btn.textContent = d.num;
+          btn.title = `${d.dateKey}${ach.hasTask ? ` (達成度: ${Math.round(ach.rate * 100)}% - ${ach.completed}/${ach.total}件)` : ''}${isHol ? ` [${holidays[d.dateKey]}]` : ''}`;
           btn.onclick = () => {
             selectedDate = d.dateKey;
             currentMonth = m;
@@ -745,7 +799,7 @@
             </div>
           </div>
           <div class="mt-3 w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-            <div class="h-full transition-all duration-300 ${percent === 100 ? 'bg-emerald-500' : 'bg-[#1a73e8]'}" style="width: ${percent}%"></div>
+            <div class="h-full transition-all duration-300 ${percent === 100 ? 'bg-[#84cc16]' : 'bg-[#1a73e8]'}" style="width: ${percent}%"></div>
           </div>
         `;
 
@@ -773,13 +827,17 @@
       miniGrid.innerHTML = '';
       const days = generateMonthDays(currentYear, currentMonth);
 
-      days.forEach(d => {
+      days.forEach((d, idx) => {
+        const ach = getDayAchievement(d.dateKey);
         const btn = document.createElement('button');
         let style = 'text-gray-400 hover:bg-gray-100';
+
         if (d.dateKey === todayKey) {
           style = 'bg-[#1a73e8] text-white font-medium shadow-xs';
         } else if (d.dateKey === selectedDate) {
           style = 'bg-[#d2e3fc] text-[#174ea6] font-medium';
+        } else if (ach.hasTask && ach.rate > 0) {
+          style = ach.rate === 1.0 ? 'bg-[#84cc16] text-white font-bold' : 'bg-[#d9f99d] text-lime-800 font-medium';
         } else if (d.isCurrent) {
           style = 'text-gray-800 hover:bg-gray-200';
         }

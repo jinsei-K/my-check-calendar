@@ -18,7 +18,8 @@ import {
   Clock,
   Filter,
   Target,
-  Flame
+  Flame,
+  Award
 } from 'lucide-react';
 
 const COLOR_OPTIONS = [
@@ -168,7 +169,7 @@ export default function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedFilterTag, setSelectedFilterTag] = useState('ALL');
 
-  // ユーザー登録イベント（LocalStorage保存）
+  // ユーザー登録イベント
   const [userEvents, setUserEvents] = useState(() => {
     try {
       const saved = localStorage.getItem('check_calendar_events');
@@ -185,7 +186,7 @@ export default function App() {
         endDate: '2026-11-08',
         tag: '勉強',
         color: 'blue',
-        completedDates: { '2026-11-04': true, '2026-11-05': true },
+        completedDates: { '2026-11-04': true, '2026-11-05': true, '2026-11-06': true },
         isHoliday: false,
       },
       {
@@ -196,9 +197,20 @@ export default function App() {
         endDate: '2026-11-20',
         tag: '勉強',
         color: 'purple',
-        completedDates: {},
+        completedDates: { '2026-11-16': true },
         isHoliday: false,
       },
+      {
+        id: 'sample-exercise',
+        overallGoal: '毎日ランニング継続',
+        dailyGoal: '朝3kmジョギング',
+        startDate: '2026-11-01',
+        endDate: '2026-11-07',
+        tag: '運動',
+        color: 'green',
+        completedDates: { '2026-11-01': true, '2026-11-02': true, '2026-11-03': true, '2026-11-04': true },
+        isHoliday: false,
+      }
     ];
   });
 
@@ -211,7 +223,7 @@ export default function App() {
   }, [userEvents]);
 
   // モーダル管理
-  const [modalMode, setModalMode] = useState(null); // 'create' | 'edit' | null
+  const [modalMode, setModalMode] = useState(null);
   const [activeEvent, setActiveEvent] = useState(null);
   const [formData, setFormData] = useState({
     overallGoal: '',
@@ -231,7 +243,7 @@ export default function App() {
     return getJapaneseHolidays(currentYear);
   }, [currentYear]);
 
-  // 全イベント（祝日含む）
+  // 全イベント
   const allEvents = useMemo(() => {
     const list = [...userEvents];
 
@@ -254,7 +266,70 @@ export default function App() {
     return list;
   }, [userEvents, yearHolidays]);
 
-  // 日付ごとのイベント判定
+  // 日付ごとの達成度を計算するヘルパー（0.0〜1.0）
+  // 祝日以外のタスクを対象に、その日の完了タスク数 / 全タスク数を算出
+  const getDayAchievement = useMemo(() => {
+    const cache = {};
+
+    return (dateKey) => {
+      if (cache[dateKey] !== undefined) return cache[dateKey];
+
+      const tasksOnDate = userEvents.filter(ev => {
+        if (ev.isHoliday) return false;
+        const s = ev.startDate;
+        const e = ev.endDate || ev.startDate;
+        return s <= dateKey && dateKey <= e;
+      });
+
+      if (tasksOnDate.length === 0) {
+        cache[dateKey] = { hasTask: false, total: 0, completed: 0, rate: 0 };
+        return cache[dateKey];
+      }
+
+      const completed = tasksOnDate.filter(ev => !!ev.completedDates?.[dateKey]).length;
+      const rate = completed / tasksOnDate.length;
+
+      cache[dateKey] = {
+        hasTask: true,
+        total: tasksOnDate.length,
+        completed,
+        rate, // 0.0 ~ 1.0
+      };
+      return cache[dateKey];
+    };
+  }, [userEvents]);
+
+  // 月表示用の黄緑背景クラス
+  const getMonthCellBgClass = (dateKey) => {
+    const ach = getDayAchievement(dateKey);
+    if (!ach.hasTask || ach.rate === 0) return 'bg-white';
+    if (ach.rate === 1.0) return 'bg-[#d9f99d]/75 border-lime-300'; // 100%達成！鮮やかな黄緑
+    if (ach.rate >= 0.5) return 'bg-[#ecfccb]/70 border-lime-200';  // 50%以上
+    return 'bg-[#f7fee7]/70 border-lime-100';                      // 一部達成
+  };
+
+  // 年表示用の黄緑背景・文字色クラス
+  const getYearDayClass = (dateKey, isCurrent, isSun, isHol, isToday, isSelected) => {
+    if (isToday) return 'bg-[#1a73e8] text-white font-medium shadow-xs';
+    if (isSelected) return 'bg-[#d2e3fc] text-[#174ea6] font-medium';
+
+    const ach = getDayAchievement(dateKey);
+
+    if (ach.hasTask && ach.rate > 0) {
+      if (ach.rate === 1.0) {
+        return 'bg-[#84cc16] text-white font-bold shadow-xs ring-1 ring-lime-600/40'; // 100%達成（草生やし最高段階）
+      }
+      if (ach.rate >= 0.5) {
+        return 'bg-[#bef264] text-lime-900 font-semibold'; // 50%以上達成
+      }
+      return 'bg-[#d9f99d] text-lime-800 font-medium';    // 一部達成
+    }
+
+    if (!isCurrent) return 'text-gray-300 hover:bg-gray-50';
+    if (isSun || isHol) return 'text-red-600 font-semibold hover:bg-red-50';
+    return 'text-gray-800 hover:bg-gray-100';
+  };
+
   const getEventsForDate = (dateKey) => {
     return allEvents.filter((ev) => {
       const titleMatch = (ev.overallGoal || ev.title || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -294,7 +369,6 @@ export default function App() {
     setSelectedDate('2026-11-11');
   };
 
-  // メイン月グリッド
   const calendarGrid = useMemo(() => {
     const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1);
     const startDayOfWeek = firstDayOfMonth.getDay();
@@ -352,12 +426,10 @@ export default function App() {
     return days;
   }, [currentYear, currentMonth, todayKey, yearHolidays]);
 
-  // ミニカレンダー
   const miniCalendarGrid = useMemo(() => {
     return generateMonthDays(currentYear, currentMonth, selectedDate, todayKey);
   }, [currentYear, currentMonth, selectedDate, todayKey]);
 
-  // 年表示データ
   const yearMonthsData = useMemo(() => {
     const months = [];
     for (let m = 1; m <= 12; m++) {
@@ -370,7 +442,6 @@ export default function App() {
     return months;
   }, [currentYear, selectedDate, todayKey]);
 
-  // モーダルオープン
   const handleOpenCreateModal = (targetDate = selectedDate, defaultTag = '勉強') => {
     setFormData({
       overallGoal: '',
@@ -399,7 +470,6 @@ export default function App() {
     setModalMode('edit');
   };
 
-  // 保存処理
   const handleSaveEvent = (e) => {
     e.preventDefault();
     if (!formData.overallGoal.trim()) return;
@@ -462,7 +532,6 @@ export default function App() {
     setActiveEvent(null);
   };
 
-  // 日ごとの目標達成チェック切り替え
   const handleToggleDailyComplete = (eventId, dateKey, e) => {
     e.stopPropagation();
     setUserEvents(prev => prev.map(ev => {
@@ -478,7 +547,6 @@ export default function App() {
   const weekDayNames = ['日', '月', '火', '水', '木', '金', '土'];
   const taskEvents = useMemo(() => allEvents.filter(e => !e.isHoliday), [allEvents]);
 
-  // 進捗計算（期間中の目標日数に対する達成日数）
   const totalTargetDaysCount = useMemo(() => {
     let targetTotal = 0;
     let completedTotal = 0;
@@ -507,7 +575,7 @@ export default function App() {
       <div className="bg-[#202124] text-[#e8eaed] text-xs px-3 py-1 flex items-center justify-between select-none shrink-0 border-b border-[#3c4043]/40">
         <span className="font-medium tracking-wide">空のWebサイト</span>
         <div className="flex items-center space-x-2 text-[11px] text-gray-400">
-          <span>チェックカレンダー - 全体の目標 × 1日の目標</span>
+          <span>チェックカレンダー - 達成度黄緑ヒートマップ対応</span>
         </div>
       </div>
 
@@ -535,6 +603,23 @@ export default function App() {
                 <span className="text-sm font-medium text-gray-700">目標・やること追加</span>
                 <ChevronDown size={14} className="text-gray-500 ml-auto" />
               </button>
+            </div>
+
+            {/* 達成度カラー凡例 */}
+            <div className="mb-3 px-2 py-2 bg-white/70 border border-gray-200/70 rounded-xl">
+              <span className="text-[10px] font-semibold text-gray-500 block mb-1">
+                その日のタスク達成度
+              </span>
+              <div className="flex items-center justify-between text-[10px] text-gray-500">
+                <span>0%</span>
+                <div className="flex items-center gap-1">
+                  <span className="w-3.5 h-3.5 rounded bg-gray-100 border border-gray-200" title="未完了"></span>
+                  <span className="w-3.5 h-3.5 rounded bg-[#f7fee7] border border-lime-200" title="一部達成"></span>
+                  <span className="w-3.5 h-3.5 rounded bg-[#bef264] border border-lime-300" title="50%以上達成"></span>
+                  <span className="w-3.5 h-3.5 rounded bg-[#84cc16] border border-lime-500" title="100%達成！"></span>
+                </div>
+                <span className="text-lime-700 font-bold">100%</span>
+              </div>
             </div>
 
             {/* タグフィルター */}
@@ -603,32 +688,43 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-7 text-center text-xs">
-                {miniCalendarGrid.map((d, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setSelectedDate(d.dateKey);
-                      const [y, m] = d.dateKey.split('-').map(Number);
-                      setCurrentDate(new Date(y, m - 1, 1));
-                      if (viewMode === 'year') setViewMode('month');
-                    }}
-                    className={`h-7 w-7 mx-auto my-0.5 rounded-full flex items-center justify-center transition-colors text-[11px] ${
-                      d.isToday
-                        ? 'bg-[#1a73e8] text-white font-medium shadow-xs'
-                        : d.isSelected
-                        ? 'bg-[#d2e3fc] text-[#174ea6] font-medium'
-                        : d.isCurrent
-                        ? 'text-gray-800 hover:bg-gray-200'
-                        : 'text-gray-400 hover:bg-gray-100'
-                    }`}
-                  >
-                    {d.num}
-                  </button>
-                ))}
+                {miniCalendarGrid.map((d, idx) => {
+                  const ach = getDayAchievement(d.dateKey);
+                  const isSun = (idx % 7 === 0);
+                  const isHol = !!yearHolidays[d.dateKey];
+
+                  return (
+                    <button
+                      key={idx}
+                      onClick={() => {
+                        setSelectedDate(d.dateKey);
+                        const [y, m] = d.dateKey.split('-').map(Number);
+                        setCurrentDate(new Date(y, m - 1, 1));
+                        if (viewMode === 'year') setViewMode('month');
+                      }}
+                      className={`h-7 w-7 mx-auto my-0.5 rounded-full flex items-center justify-center transition-colors text-[11px] ${
+                        d.isToday
+                          ? 'bg-[#1a73e8] text-white font-medium shadow-xs'
+                          : d.isSelected
+                          ? 'bg-[#d2e3fc] text-[#174ea6] font-medium'
+                          : ach.hasTask && ach.rate > 0
+                          ? ach.rate === 1.0
+                            ? 'bg-[#84cc16] text-white font-bold'
+                            : 'bg-[#d9f99d] text-lime-800 font-medium'
+                          : d.isCurrent
+                          ? (isSun || isHol ? 'text-red-600 font-semibold hover:bg-red-50' : 'text-gray-800 hover:bg-gray-200')
+                          : 'text-gray-400 hover:bg-gray-100'
+                      }`}
+                      title={ach.hasTask ? `${d.dateKey}: 達成度 ${Math.round(ach.rate * 100)}%` : d.dateKey}
+                    >
+                      {d.num}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            {/* 1日目標の累計達成率 */}
+            {/* 進捗バー */}
             <div className="mt-auto pt-3 pb-2 border-t border-gray-200/80 px-2">
               <div className="flex items-center justify-between text-xs font-medium text-gray-600 mb-1.5">
                 <span className="flex items-center gap-1.5">
@@ -696,14 +792,14 @@ export default function App() {
                 {viewMode === 'year' ? `${currentYear}年` : `${currentYear}年 ${currentMonth}月`}
               </h1>
 
-              {selectedFilterTag !== 'ALL' && (
-                <div className="hidden sm:flex items-center gap-1.5 ml-2 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-full text-xs text-[#1a73e8]">
-                  <span>#{selectedFilterTag}</span>
-                  <button onClick={() => setSelectedFilterTag('ALL')} className="hover:text-blue-800">
-                    <X size={12} />
-                  </button>
-                </div>
-              )}
+              {/* 達成度ヒートマップの凡例 */}
+              <div className="hidden md:flex items-center gap-1.5 ml-3 px-2.5 py-1 bg-white border border-gray-200 rounded-full text-[11px] text-gray-500 shadow-2xs">
+                <span>達成度:</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-gray-200" title="0%"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#d9f99d]" title="一部達成"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#bef264]" title="50%以上"></span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#84cc16]" title="100%達成！"></span>
+              </div>
             </div>
 
             <div className="flex items-center space-x-1 sm:space-x-2">
@@ -739,7 +835,7 @@ export default function App() {
               )}
 
               <button
-                onClick={() => alert('【全体の目標 × 1日に達成する目標の使い方】\n・「作成」から「全体の目標（例: 単語帳1冊走破）」と「1日に達成する目標（例: 1日50単語）」を入力できます。\n・カレンダーの各マスには、その日の「1日に達成する目標」が表示され、チェックボックスで毎日達成チェックができます！')}
+                onClick={() => alert('【達成度黄緑カラー機能】\n・タスクを完了すると、その日の達成率に応じてカレンダーの日付マスが黄緑色（ライトグリーン〜ライムグリーン）に変化します！\n・年間表示でも日々の達成度が黄緑の草生やし（ヒートマップ）として一目で振り返ることができます！')}
                 className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
                 title="ヘルプ"
               >
@@ -808,7 +904,7 @@ export default function App() {
 
           {/* ビュー描画 */}
           {viewMode === 'month' ? (
-            /* =================== 月表示 =================== */
+            /* =================== 月表示 (達成度に応じて背景が黄緑に染まる) =================== */
             <main className="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
               <div className="grid grid-cols-7 border-b border-gray-200 text-center py-2 text-xs font-medium text-gray-500 bg-white">
                 {weekDayNames.map((day, idx) => (
@@ -827,6 +923,8 @@ export default function App() {
                   const isRowBottomBorder = Math.floor(idx / 7) < totalRows - 1;
                   const dayEvents = getEventsForDate(cell.id);
                   const isSundayOrHoliday = (idx % 7 === 0) || cell.isHoliday;
+                  const bgClass = getMonthCellBgClass(cell.id);
+                  const ach = getDayAchievement(cell.id);
 
                   return (
                     <div
@@ -835,14 +933,24 @@ export default function App() {
                         setSelectedDate(cell.id);
                         handleOpenCreateModal(cell.id, '勉強');
                       }}
-                      className={`flex flex-col p-1 relative group hover:bg-blue-50/20 transition-colors cursor-pointer overflow-hidden ${
+                      className={`flex flex-col p-1 relative group transition-colors cursor-pointer overflow-hidden ${bgClass} ${
                         isColRightBorder ? 'border-r border-gray-200' : ''
                       } ${isRowBottomBorder ? 'border-b border-gray-200' : ''} ${
-                        selectedDate === cell.id ? 'bg-blue-50/20' : ''
-                      }`}
+                        selectedDate === cell.id ? 'ring-2 ring-inset ring-blue-500' : ''
+                      } hover:brightness-98`}
                     >
-                      {/* 日付ヘッダー */}
-                      <div className="flex justify-center items-center h-6 mb-1 shrink-0">
+                      {/* 日付ヘッダー ＋ 100%達成バッジ */}
+                      <div className="flex justify-between items-center h-6 px-1 mb-1 shrink-0">
+                        {/* 左側: 達成率バッジ (タスクがある日のみ) */}
+                        {ach.hasTask ? (
+                          <span className={`text-[9px] font-bold px-1 rounded-sm ${
+                            ach.rate === 1.0 ? 'bg-[#84cc16] text-white' : ach.rate > 0 ? 'bg-lime-200 text-lime-900' : 'text-gray-400'
+                          }`}>
+                            {ach.completed}/{ach.total}
+                          </span>
+                        ) : <div className="w-4" />}
+
+                        {/* 中央: 日付数字 */}
                         {cell.isToday ? (
                           <div className="w-6 h-6 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-xs font-medium shadow-xs">
                             {cell.day}
@@ -858,6 +966,11 @@ export default function App() {
                             {cell.display}
                           </span>
                         )}
+
+                        {/* 右側: 100%達成クラウン/星 */}
+                        {ach.hasTask && ach.rate === 1.0 ? (
+                          <span className="text-[10px]" title="全タスク達成！">🌟</span>
+                        ) : <div className="w-4" />}
                       </div>
 
                       {/* やること・目標リスト */}
@@ -865,11 +978,7 @@ export default function App() {
                         {dayEvents.map((ev) => {
                           const colorObj = COLOR_OPTIONS.find(c => c.id === ev.color) || COLOR_OPTIONS[0];
                           const isDailyDone = !!ev.completedDates?.[cell.id];
-                          const isStartDay = cell.id === ev.startDate;
-                          const isEndDay = cell.id === ev.endDate;
-                          const isMultiDay = ev.startDate !== ev.endDate;
 
-                          // 祝日の場合
                           if (ev.isHoliday) {
                             return (
                               <div
@@ -888,19 +997,18 @@ export default function App() {
                               onClick={(e) => handleOpenEditModal(ev, e)}
                               className={`flex flex-col p-1 text-[11px] leading-tight font-normal rounded shadow-xs transition-all cursor-pointer border ${
                                 isDailyDone
-                                  ? 'bg-gray-100/90 border-gray-300 text-gray-400'
+                                  ? 'bg-lime-50/90 border-lime-300 text-gray-500'
                                   : `${colorObj.bg} text-white ${colorObj.border}`
                               } hover:brightness-95`}
                               title={`【全体の目標】${ev.overallGoal}\n【1日の目標】${ev.dailyGoal || 'なし'}`}
                             >
-                              {/* 1行目: チェックボックス ＋ 1日の目標（または全体の目標） */}
                               <div className="flex items-center gap-1">
                                 <button
                                   type="button"
                                   onClick={(e) => handleToggleDailyComplete(ev.id, cell.id, e)}
                                   className={`w-3.5 h-3.5 rounded flex items-center justify-center border shrink-0 transition-colors ${
                                     isDailyDone
-                                      ? 'bg-emerald-600 border-emerald-600 text-white'
+                                      ? 'bg-[#84cc16] border-[#84cc16] text-white shadow-2xs'
                                       : 'bg-white/20 border-white/80 hover:bg-white/40 text-white'
                                   }`}
                                   title={isDailyDone ? '未達成に戻す' : '今日の目標を達成！'}
@@ -908,12 +1016,11 @@ export default function App() {
                                   {isDailyDone && <Check size={10} strokeWidth={3} className="text-white" />}
                                 </button>
 
-                                <span className={`truncate font-medium ${isDailyDone ? 'line-through text-gray-400' : 'text-white'}`}>
+                                <span className={`truncate font-medium ${isDailyDone ? 'line-through text-gray-500' : 'text-white'}`}>
                                   {ev.dailyGoal ? ev.dailyGoal : ev.overallGoal}
                                 </span>
                               </div>
 
-                              {/* 2行目: 全体の目標 & タグ（小さくサブ情報として表示） */}
                               {ev.dailyGoal && (
                                 <div className={`text-[9px] truncate pl-4.5 mt-0.5 flex items-center gap-1 ${isDailyDone ? 'text-gray-400' : 'text-white/80'}`}>
                                   <span className="truncate">🎯 {ev.overallGoal}</span>
@@ -935,12 +1042,12 @@ export default function App() {
               </div>
             </main>
           ) : viewMode === 'year' ? (
-            /* =================== 年表示 =================== */
+            /* =================== 年間表示 (その日の達成度が黄緑の草生やしで見える) =================== */
             <main className="flex-1 bg-white border border-gray-200 rounded-2xl overflow-y-auto p-4 sm:p-6 shadow-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6 max-w-7xl mx-auto">
                 {yearMonthsData.map((m) => (
                   <div key={m.monthNum} className="flex flex-col">
-                    <div className="mb-2">
+                    <div className="mb-2 flex items-center justify-between">
                       <button
                         onClick={() => {
                           setCurrentDate(new Date(currentYear, m.monthNum - 1, 1));
@@ -964,6 +1071,8 @@ export default function App() {
                       {m.days.map((d, idx) => {
                         const isHol = !!yearHolidays[d.dateKey];
                         const isSun = (idx % 7 === 0);
+                        const ach = getDayAchievement(d.dateKey);
+                        const dayStyle = getYearDayClass(d.dateKey, d.isCurrent, isSun, isHol, d.isToday, d.isSelected);
 
                         return (
                           <button
@@ -974,16 +1083,8 @@ export default function App() {
                               setCurrentDate(new Date(y, mon - 1, 1));
                               setViewMode('month');
                             }}
-                            className={`h-6 w-6 mx-auto my-0.5 rounded-full flex items-center justify-center transition-all text-[11px] ${
-                              d.dateKey === todayKey
-                                ? 'bg-[#1a73e8] text-white font-medium shadow-xs'
-                                : d.dateKey === selectedDate
-                                ? 'bg-[#d2e3fc] text-[#174ea6] font-medium'
-                                : d.isCurrent
-                                ? (isSun || isHol ? 'text-red-600 font-semibold hover:bg-red-50' : 'text-gray-800 hover:bg-gray-100')
-                                : 'text-gray-300 hover:bg-gray-50'
-                            }`}
-                            title={d.dateKey}
+                            className={`h-6 w-6 mx-auto my-0.5 rounded-full flex items-center justify-center transition-all text-[11px] ${dayStyle}`}
+                            title={`${d.dateKey}${ach.hasTask ? ` (達成度: ${Math.round(ach.rate * 100)}% - ${ach.completed}/${ach.total}件)` : ''}${isHol ? ` [${yearHolidays[d.dateKey]}]` : ''}`}
                           >
                             {d.num}
                           </button>
@@ -995,7 +1096,7 @@ export default function App() {
               </div>
             </main>
           ) : (
-            /* =================== チェック一覧（全体の目標 × 1日の目標） =================== */
+            /* =================== チェック一覧 =================== */
             <main className="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs p-6">
               <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4">
                 <div>
@@ -1034,7 +1135,6 @@ export default function App() {
                       >
                         <div className="flex items-start justify-between">
                           <div className="space-y-1">
-                            {/* 全体の目標 */}
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-[#1a73e8] uppercase tracking-wider">
                                 全体の目標
@@ -1049,7 +1149,6 @@ export default function App() {
                               )}
                             </div>
 
-                            {/* 1日に達成する目標 */}
                             {t.dailyGoal && (
                               <div className="flex items-center gap-2 text-sm text-gray-700 pl-1 mt-1">
                                 <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
@@ -1059,7 +1158,6 @@ export default function App() {
                               </div>
                             )}
 
-                            {/* 期間情報 */}
                             <div className="flex items-center gap-4 text-xs text-gray-500 pt-1 pl-1">
                               <span className="flex items-center gap-1">
                                 <Clock size={13} className="text-gray-400" />
@@ -1092,10 +1190,9 @@ export default function App() {
                           </div>
                         </div>
 
-                        {/* 進捗プログレスバー */}
                         <div className="mt-3 w-full bg-gray-100 h-2 rounded-full overflow-hidden">
                           <div
-                            className={`h-full transition-all duration-300 ${percent === 100 ? 'bg-emerald-500' : 'bg-[#1a73e8]'}`}
+                            className={`h-full transition-all duration-300 ${percent === 100 ? 'bg-[#84cc16]' : 'bg-[#1a73e8]'}`}
                             style={{ width: `${percent}%` }}
                           />
                         </div>
@@ -1109,7 +1206,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* 目標作成・編集モーダル */}
+      {/* モーダル */}
       {modalMode && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
           <div
@@ -1130,7 +1227,6 @@ export default function App() {
             </div>
 
             <form onSubmit={handleSaveEvent} className="p-6 space-y-4">
-              {/* 1. 全体の目標 */}
               <div className="bg-blue-50/50 p-3.5 rounded-xl border border-blue-100">
                 <label className="block text-xs font-bold text-[#1a73e8] mb-1 flex items-center gap-1.5">
                   <Target size={14} />
@@ -1142,13 +1238,12 @@ export default function App() {
                   required
                   value={formData.overallGoal}
                   onChange={(e) => setFormData({ ...formData, overallGoal: e.target.value })}
-                  placeholder="例: 単語帳1900語を完全走破、基本情報技術者過去問3年分制覇"
+                  placeholder="例: 単語帳1900語を完全走破、基本情報過去問3年分制覇"
                   className="w-full px-3.5 py-2.5 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a73e8] transition-all"
                   autoFocus
                 />
               </div>
 
-              {/* 2. 1日に達成する目標 */}
               <div className="bg-emerald-50/50 p-3.5 rounded-xl border border-emerald-100">
                 <label className="block text-xs font-bold text-emerald-700 mb-1 flex items-center gap-1.5">
                   <Flame size={14} />
@@ -1164,7 +1259,6 @@ export default function App() {
                 />
               </div>
 
-              {/* やる期間（開始日・終了日） */}
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1">
@@ -1207,7 +1301,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* タグ選択 */}
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1">
                   <TagIcon size={13} />
@@ -1239,7 +1332,6 @@ export default function App() {
                 />
               </div>
 
-              {/* カラー選択 */}
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1.5">タグカラー</label>
                 <div className="flex items-center gap-3">
@@ -1258,7 +1350,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* フッター */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                 {modalMode === 'edit' ? (
                   <button
