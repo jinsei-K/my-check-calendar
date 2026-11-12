@@ -16,10 +16,11 @@ import {
   Sparkles,
   Tag as TagIcon,
   Clock,
-  Filter
+  Filter,
+  Target,
+  Flame
 } from 'lucide-react';
 
-// カラーパレット定義
 const COLOR_OPTIONS = [
   { id: 'blue', name: 'ブルー', bg: 'bg-[#1a73e8]', border: 'border-[#1a73e8]', text: 'text-white' },
   { id: 'green', name: 'グリーン', bg: 'bg-[#137333]', border: 'border-[#137333]', text: 'text-white' },
@@ -28,7 +29,6 @@ const COLOR_OPTIONS = [
   { id: 'purple', name: 'パープル', bg: 'bg-[#a142f4]', border: 'border-[#a142f4]', text: 'text-white' },
 ];
 
-// よく使うタグのプリセット
 const PRESET_TAGS = [
   { id: '勉強', name: '勉強', icon: '📚', color: 'blue' },
   { id: '仕事', name: '仕事', icon: '💼', color: 'yellow' },
@@ -43,7 +43,6 @@ function formatDateKey(year, month, day) {
   return `${year}-${m}-${d}`;
 }
 
-// 期間の日数を計算
 function calculateDaysCount(start, end) {
   if (!start || !end) return 1;
   const d1 = new Date(start);
@@ -92,7 +91,6 @@ function getJapaneseHolidays(year) {
   add(11, 15, '七五三');
   add(11, 23, '勤労感謝の日');
 
-  // 振替休日
   const sortedDates = Object.keys(holidays).sort();
   const substitutes = {};
   sortedDates.forEach((dateStr) => {
@@ -163,14 +161,12 @@ export default function App() {
   const [selectedDate, setSelectedDate] = useState('2026-11-01');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // 表示モード
   const [viewMode, setViewMode] = useState('month');
   const [isViewDropdownOpen, setIsViewDropdownOpen] = useState(false);
 
-  // 検索 & タグフィルター
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [selectedFilterTag, setSelectedFilterTag] = useState('ALL'); // 'ALL' or tag name
+  const [selectedFilterTag, setSelectedFilterTag] = useState('ALL');
 
   // ユーザー登録イベント（LocalStorage保存）
   const [userEvents, setUserEvents] = useState(() => {
@@ -180,26 +176,27 @@ export default function App() {
     } catch (e) {
       console.error(e);
     }
-    // 初期サンプル（勉強などのやることと期間）
     return [
       {
         id: 'sample-study-1',
-        title: '英単語 ターゲット1900 暗記',
+        overallGoal: '英単語ターゲット1900 完走',
+        dailyGoal: '1日50単語暗記＆確認テスト',
         startDate: '2026-11-04',
         endDate: '2026-11-08',
         tag: '勉強',
         color: 'blue',
-        isCompleted: false,
+        completedDates: { '2026-11-04': true, '2026-11-05': true },
         isHoliday: false,
       },
       {
         id: 'sample-study-2',
-        title: '基本情報技術者試験 過去問演習',
+        overallGoal: '基本情報技術者 午前過去問 3年分制覇',
+        dailyGoal: '午前過去問 20問解答＆見直し',
         startDate: '2026-11-16',
         endDate: '2026-11-20',
         tag: '勉強',
         color: 'purple',
-        isCompleted: false,
+        completedDates: {},
         isHoliday: false,
       },
     ];
@@ -213,11 +210,12 @@ export default function App() {
     }
   }, [userEvents]);
 
-  // モーダル状態
+  // モーダル管理
   const [modalMode, setModalMode] = useState(null); // 'create' | 'edit' | null
   const [activeEvent, setActiveEvent] = useState(null);
   const [formData, setFormData] = useState({
-    title: '',
+    overallGoal: '',
+    dailyGoal: '',
     startDate: '2026-11-11',
     endDate: '2026-11-11',
     tag: '勉強',
@@ -229,25 +227,25 @@ export default function App() {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth() + 1;
 
-  // 当年の祝日
   const yearHolidays = useMemo(() => {
     return getJapaneseHolidays(currentYear);
   }, [currentYear]);
 
-  // 全イベント
+  // 全イベント（祝日含む）
   const allEvents = useMemo(() => {
     const list = [...userEvents];
 
     Object.entries(yearHolidays).forEach(([dateStr, name]) => {
-      if (!list.some(e => e.startDate === dateStr && e.title === name)) {
+      if (!list.some(e => e.startDate === dateStr && (e.overallGoal === name || e.title === name))) {
         list.push({
           id: `sys-holiday-${dateStr}`,
-          title: name,
+          overallGoal: name,
+          dailyGoal: '',
           startDate: dateStr,
           endDate: dateStr,
           tag: '祝日',
           color: 'green',
-          isCompleted: false,
+          completedDates: {},
           isHoliday: true,
         });
       }
@@ -256,14 +254,16 @@ export default function App() {
     return list;
   }, [userEvents, yearHolidays]);
 
-  // 日付ごとのイベント判定（期間 startDate <= date <= endDate に一致するもの）
+  // 日付ごとのイベント判定
   const getEventsForDate = (dateKey) => {
     return allEvents.filter((ev) => {
-      // 検索フィルター
-      if (searchQuery.trim() && !ev.title.toLowerCase().includes(searchQuery.toLowerCase()) && !ev.tag?.toLowerCase().includes(searchQuery.toLowerCase())) {
+      const titleMatch = (ev.overallGoal || ev.title || '').toLowerCase().includes(searchQuery.toLowerCase());
+      const dailyMatch = (ev.dailyGoal || '').toLowerCase().includes(searchQuery.toLowerCase());
+      const tagMatch = (ev.tag || '').toLowerCase().includes(searchQuery.toLowerCase());
+
+      if (searchQuery.trim() && !titleMatch && !dailyMatch && !tagMatch) {
         return false;
       }
-      // タグフィルター
       if (selectedFilterTag !== 'ALL' && ev.tag !== selectedFilterTag) {
         return false;
       }
@@ -273,7 +273,6 @@ export default function App() {
     });
   };
 
-  // ナビゲーション
   const handlePrev = () => {
     if (viewMode === 'year') {
       setCurrentDate(new Date(currentYear - 1, currentMonth - 1, 1));
@@ -371,10 +370,11 @@ export default function App() {
     return months;
   }, [currentYear, selectedDate, todayKey]);
 
-  // 作成モーダルを開く
+  // モーダルオープン
   const handleOpenCreateModal = (targetDate = selectedDate, defaultTag = '勉強') => {
     setFormData({
-      title: '',
+      overallGoal: '',
+      dailyGoal: '',
       startDate: targetDate,
       endDate: targetDate,
       tag: defaultTag,
@@ -384,12 +384,12 @@ export default function App() {
     setModalMode('create');
   };
 
-  // 編集モーダルを開く
   const handleOpenEditModal = (ev, e) => {
     e.stopPropagation();
     setActiveEvent(ev);
     setFormData({
-      title: ev.title,
+      overallGoal: ev.overallGoal || ev.title || '',
+      dailyGoal: ev.dailyGoal || '',
       startDate: ev.startDate || ev.date,
       endDate: ev.endDate || ev.startDate || ev.date,
       tag: ev.tag || '勉強',
@@ -402,20 +402,20 @@ export default function App() {
   // 保存処理
   const handleSaveEvent = (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) return;
+    if (!formData.overallGoal.trim()) return;
 
-    // 終了日が開始日より前の場合は開始日と同じにする
     const cleanEndDate = formData.endDate < formData.startDate ? formData.startDate : formData.endDate;
 
     if (modalMode === 'create') {
       const newEv = {
         id: `event-${Date.now()}`,
-        title: formData.title.trim(),
+        overallGoal: formData.overallGoal.trim(),
+        dailyGoal: formData.dailyGoal.trim(),
         startDate: formData.startDate,
         endDate: cleanEndDate,
         tag: formData.tag || '勉強',
         color: formData.color,
-        isCompleted: false,
+        completedDates: {},
         isHoliday: formData.isHoliday,
       };
       setUserEvents(prev => [...prev, newEv]);
@@ -423,12 +423,13 @@ export default function App() {
       if (activeEvent.id.startsWith('sys-holiday-')) {
         const newEv = {
           id: `custom-event-${Date.now()}`,
-          title: formData.title.trim(),
+          overallGoal: formData.overallGoal.trim(),
+          dailyGoal: formData.dailyGoal.trim(),
           startDate: formData.startDate,
           endDate: cleanEndDate,
           tag: formData.tag,
           color: formData.color,
-          isCompleted: false,
+          completedDates: {},
           isHoliday: formData.isHoliday,
         };
         setUserEvents(prev => [...prev, newEv]);
@@ -437,7 +438,8 @@ export default function App() {
           if (ev.id === activeEvent.id) {
             return {
               ...ev,
-              title: formData.title.trim(),
+              overallGoal: formData.overallGoal.trim(),
+              dailyGoal: formData.dailyGoal.trim(),
               startDate: formData.startDate,
               endDate: cleanEndDate,
               tag: formData.tag,
@@ -460,11 +462,14 @@ export default function App() {
     setActiveEvent(null);
   };
 
-  const handleToggleComplete = (eventId, e) => {
+  // 日ごとの目標達成チェック切り替え
+  const handleToggleDailyComplete = (eventId, dateKey, e) => {
     e.stopPropagation();
     setUserEvents(prev => prev.map(ev => {
       if (ev.id === eventId) {
-        return { ...ev, isCompleted: !ev.isCompleted };
+        const currentDates = { ...(ev.completedDates || {}) };
+        currentDates[dateKey] = !currentDates[dateKey];
+        return { ...ev, completedDates: currentDates };
       }
       return ev;
     }));
@@ -472,13 +477,20 @@ export default function App() {
 
   const weekDayNames = ['日', '月', '火', '水', '木', '金', '土'];
   const taskEvents = useMemo(() => allEvents.filter(e => !e.isHoliday), [allEvents]);
-  const holidayList = useMemo(() => {
-    return Object.entries(yearHolidays)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, title]) => ({ date, title }));
-  }, [yearHolidays]);
 
-  // 利用可能なタグ一覧
+  // 進捗計算（期間中の目標日数に対する達成日数）
+  const totalTargetDaysCount = useMemo(() => {
+    let targetTotal = 0;
+    let completedTotal = 0;
+    userEvents.forEach(ev => {
+      const days = calculateDaysCount(ev.startDate, ev.endDate);
+      targetTotal += days;
+      const compCount = Object.values(ev.completedDates || {}).filter(Boolean).length;
+      completedTotal += compCount;
+    });
+    return { targetTotal, completedTotal };
+  }, [userEvents]);
+
   const availableTags = useMemo(() => {
     const set = new Set(['勉強', '仕事', '運動', '読書', '趣味']);
     userEvents.forEach(e => {
@@ -487,7 +499,7 @@ export default function App() {
     return Array.from(set);
   }, [userEvents]);
 
-  const currentViewLabel = viewMode === 'year' ? '年' : viewMode === 'month' ? '月' : viewMode === 'holidays' ? '祝日一覧' : 'チェック一覧';
+  const currentViewLabel = viewMode === 'year' ? '年' : viewMode === 'month' ? '月' : 'チェック一覧';
 
   return (
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#f8fafd] text-[#3c4043] font-sans antialiased">
@@ -495,7 +507,7 @@ export default function App() {
       <div className="bg-[#202124] text-[#e8eaed] text-xs px-3 py-1 flex items-center justify-between select-none shrink-0 border-b border-[#3c4043]/40">
         <span className="font-medium tracking-wide">空のWebサイト</span>
         <div className="flex items-center space-x-2 text-[11px] text-gray-400">
-          <span>チェックカレンダー - やること・勉強・期間管理</span>
+          <span>チェックカレンダー - 全体の目標 × 1日の目標</span>
         </div>
       </div>
 
@@ -520,12 +532,12 @@ export default function App() {
                 className="w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-white border border-gray-200/80 shadow-[0_1px_3px_0_rgba(60,64,67,0.3),0_4px_8px_3px_rgba(60,64,67,0.15)] hover:shadow-[0_2px_6px_2px_rgba(60,64,67,0.3),0_6px_10px_4px_rgba(60,64,67,0.15)] transition-all cursor-pointer group"
               >
                 <Plus size={20} className="text-[#3c4043] group-hover:rotate-90 transition-transform" strokeWidth={2.4} />
-                <span className="text-sm font-medium text-gray-700">やること・勉強を追加</span>
+                <span className="text-sm font-medium text-gray-700">目標・やること追加</span>
                 <ChevronDown size={14} className="text-gray-500 ml-auto" />
               </button>
             </div>
 
-            {/* タグ別絞り込みフィルター */}
+            {/* タグフィルター */}
             <div className="mb-4 px-1">
               <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
                 <Filter size={12} />
@@ -616,22 +628,22 @@ export default function App() {
               </div>
             </div>
 
-            {/* 進捗バー */}
+            {/* 1日目標の累計達成率 */}
             <div className="mt-auto pt-3 pb-2 border-t border-gray-200/80 px-2">
               <div className="flex items-center justify-between text-xs font-medium text-gray-600 mb-1.5">
                 <span className="flex items-center gap-1.5">
-                  <CheckSquare size={14} className="text-[#1a73e8]" />
-                  やること達成率
+                  <Flame size={14} className="text-orange-500" />
+                  日々の目標達成
                 </span>
-                <span className="text-[11px] bg-blue-50 text-[#1a73e8] px-2 py-0.5 rounded-full">
-                  {taskEvents.filter(t => t.isCompleted).length} / {taskEvents.length} 完了
+                <span className="text-[11px] bg-orange-50 text-orange-600 font-semibold px-2 py-0.5 rounded-full">
+                  {totalTargetDaysCount.completedTotal} / {totalTargetDaysCount.targetTotal} 日
                 </span>
               </div>
               <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
                 <div
-                  className="bg-[#1a73e8] h-full transition-all duration-300"
+                  className="bg-orange-500 h-full transition-all duration-300"
                   style={{
-                    width: `${taskEvents.length > 0 ? (taskEvents.filter(t => t.isCompleted).length / taskEvents.length) * 100 : 0}%`
+                    width: `${totalTargetDaysCount.targetTotal > 0 ? (totalTargetDaysCount.completedTotal / totalTargetDaysCount.targetTotal) * 100 : 0}%`
                   }}
                 />
               </div>
@@ -684,10 +696,9 @@ export default function App() {
                 {viewMode === 'year' ? `${currentYear}年` : `${currentYear}年 ${currentMonth}月`}
               </h1>
 
-              {/* 選択中のタグフィルター表示バッジ */}
               {selectedFilterTag !== 'ALL' && (
                 <div className="hidden sm:flex items-center gap-1.5 ml-2 px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-full text-xs text-[#1a73e8]">
-                  <span>絞り込み: #{selectedFilterTag}</span>
+                  <span>#{selectedFilterTag}</span>
                   <button onClick={() => setSelectedFilterTag('ALL')} className="hover:text-blue-800">
                     <X size={12} />
                   </button>
@@ -703,7 +714,7 @@ export default function App() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="やること・タグを検索..."
+                    placeholder="全体目標・1日の目標を検索..."
                     className="bg-transparent border-none outline-none text-xs text-gray-700 w-36 sm:w-48"
                     autoFocus
                   />
@@ -728,7 +739,7 @@ export default function App() {
               )}
 
               <button
-                onClick={() => alert('【やること・勉強・期間機能の使い方】\n・「作成」ボタンまたはカレンダーのセルをクリックして、やること・タグ（#勉強など）・やる期間（開始日〜終了日）を登録できます。\n・複数日にわたるやることは帯状の期間バーとしてカレンダー上に連続表示されます。\n・タスクのチェックボックスで完了/未完了を切り替えられます。')}
+                onClick={() => alert('【全体の目標 × 1日に達成する目標の使い方】\n・「作成」から「全体の目標（例: 単語帳1冊走破）」と「1日に達成する目標（例: 1日50単語）」を入力できます。\n・カレンダーの各マスには、その日の「1日に達成する目標」が表示され、チェックボックスで毎日達成チェックができます！')}
                 className="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition-colors"
                 title="ヘルプ"
               >
@@ -737,7 +748,7 @@ export default function App() {
 
               <button
                 onClick={() => {
-                  if (confirm('登録したやることデータを初期化しますか？')) {
+                  if (confirm('登録した目標・やることデータを初期化しますか？')) {
                     localStorage.removeItem('check_calendar_events');
                     window.location.reload();
                   }
@@ -748,7 +759,6 @@ export default function App() {
                 <Settings size={20} />
               </button>
 
-              {/* ビュー切替ドロップダウン */}
               <div className="relative">
                 <button
                   onClick={() => setIsViewDropdownOpen(prev => !prev)}
@@ -782,16 +792,6 @@ export default function App() {
                     </button>
                     <button
                       onClick={() => {
-                        setViewMode('holidays');
-                        setIsViewDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-4 py-2 text-xs flex items-center justify-between hover:bg-gray-100 ${viewMode === 'holidays' ? 'font-semibold text-[#1a73e8]' : 'text-gray-700'}`}
-                    >
-                      <span>祝日一覧</span>
-                      {viewMode === 'holidays' && <Check size={14} />}
-                    </button>
-                    <button
-                      onClick={() => {
                         setViewMode('check-list');
                         setIsViewDropdownOpen(false);
                       }}
@@ -808,7 +808,7 @@ export default function App() {
 
           {/* ビュー描画 */}
           {viewMode === 'month' ? (
-            /* =================== 月表示 (Month View) =================== */
+            /* =================== 月表示 =================== */
             <main className="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs">
               <div className="grid grid-cols-7 border-b border-gray-200 text-center py-2 text-xs font-medium text-gray-500 bg-white">
                 {weekDayNames.map((day, idx) => (
@@ -860,62 +860,70 @@ export default function App() {
                         )}
                       </div>
 
-                      {/* やること・期間バー・イベント一覧 */}
+                      {/* やること・目標リスト */}
                       <div className="flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar">
                         {dayEvents.map((ev) => {
                           const colorObj = COLOR_OPTIONS.find(c => c.id === ev.color) || COLOR_OPTIONS[0];
-                          const isMultiDay = ev.startDate && ev.endDate && ev.startDate !== ev.endDate;
+                          const isDailyDone = !!ev.completedDates?.[cell.id];
                           const isStartDay = cell.id === ev.startDate;
                           const isEndDay = cell.id === ev.endDate;
+                          const isMultiDay = ev.startDate !== ev.endDate;
+
+                          // 祝日の場合
+                          if (ev.isHoliday) {
+                            return (
+                              <div
+                                key={`${ev.id}-${cell.id}`}
+                                className="bg-[#137333] text-white text-[11px] leading-tight px-1.5 py-0.5 rounded font-normal truncate shadow-xs"
+                                title={ev.overallGoal}
+                              >
+                                {ev.overallGoal}
+                              </div>
+                            );
+                          }
 
                           return (
                             <div
                               key={`${ev.id}-${cell.id}`}
                               onClick={(e) => handleOpenEditModal(ev, e)}
-                              className={`flex items-center gap-1 text-[11px] leading-tight px-1.5 py-0.5 font-normal truncate shadow-xs transition-all cursor-pointer ${
-                                ev.color === 'green' ? 'bg-[#137333] text-white hover:bg-[#0f5c29]' : `${colorObj.bg} ${colorObj.text}`
-                              } ${
-                                isMultiDay
-                                  ? (isStartDay ? 'rounded-l-md mr-0' : isEndDay ? 'rounded-r-md ml-0' : 'rounded-none mx-0')
-                                  : 'rounded'
-                              } ${ev.isCompleted ? 'opacity-40 line-through' : 'hover:brightness-95'}`}
-                              title={`${ev.title}${ev.tag ? ` [${ev.tag}]` : ''}${isMultiDay ? ` (${ev.startDate} 〜 ${ev.endDate})` : ''}`}
+                              className={`flex flex-col p-1 text-[11px] leading-tight font-normal rounded shadow-xs transition-all cursor-pointer border ${
+                                isDailyDone
+                                  ? 'bg-gray-100/90 border-gray-300 text-gray-400'
+                                  : `${colorObj.bg} text-white ${colorObj.border}`
+                              } hover:brightness-95`}
+                              title={`【全体の目標】${ev.overallGoal}\n【1日の目標】${ev.dailyGoal || 'なし'}`}
                             >
-                              {/* チェックボタン */}
-                              {!ev.isHoliday && (
+                              {/* 1行目: チェックボックス ＋ 1日の目標（または全体の目標） */}
+                              <div className="flex items-center gap-1">
                                 <button
                                   type="button"
-                                  onClick={(e) => handleToggleComplete(ev.id, e)}
-                                  className={`w-3.5 h-3.5 rounded flex items-center justify-center border border-white/80 shrink-0 transition-colors ${
-                                    ev.isCompleted ? 'bg-white text-gray-800' : 'hover:bg-white/20'
+                                  onClick={(e) => handleToggleDailyComplete(ev.id, cell.id, e)}
+                                  className={`w-3.5 h-3.5 rounded flex items-center justify-center border shrink-0 transition-colors ${
+                                    isDailyDone
+                                      ? 'bg-emerald-600 border-emerald-600 text-white'
+                                      : 'bg-white/20 border-white/80 hover:bg-white/40 text-white'
                                   }`}
-                                  title={ev.isCompleted ? '未完了に戻す' : '完了にする'}
+                                  title={isDailyDone ? '未達成に戻す' : '今日の目標を達成！'}
                                 >
-                                  {ev.isCompleted && <Check size={10} strokeWidth={3} className="text-gray-800" />}
+                                  {isDailyDone && <Check size={10} strokeWidth={3} className="text-white" />}
                                 </button>
-                              )}
 
-                              {/* タグ表示 */}
-                              {ev.tag && !ev.isHoliday && (
-                                <span className="text-[9px] bg-black/20 px-1 py-0.2 rounded shrink-0 font-medium">
-                                  #{ev.tag}
+                                <span className={`truncate font-medium ${isDailyDone ? 'line-through text-gray-400' : 'text-white'}`}>
+                                  {ev.dailyGoal ? ev.dailyGoal : ev.overallGoal}
                                 </span>
-                              )}
+                              </div>
 
-                              <span className="truncate">{ev.title}</span>
-
-                              {/* 複数日期間の初日に期間バッジ表示 */}
-                              {isStartDay && isMultiDay && (
-                                <span className="text-[9px] opacity-80 shrink-0 ml-auto font-mono">
-                                  {calculateDaysCount(ev.startDate, ev.endDate)}日間
-                                </span>
+                              {/* 2行目: 全体の目標 & タグ（小さくサブ情報として表示） */}
+                              {ev.dailyGoal && (
+                                <div className={`text-[9px] truncate pl-4.5 mt-0.5 flex items-center gap-1 ${isDailyDone ? 'text-gray-400' : 'text-white/80'}`}>
+                                  <span className="truncate">🎯 {ev.overallGoal}</span>
+                                </div>
                               )}
                             </div>
                           );
                         })}
                       </div>
 
-                      {/* ホバー時の追加ボタン */}
                       <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="w-5 h-5 rounded-full bg-blue-100 text-[#1a73e8] flex items-center justify-center">
                           <Plus size={12} strokeWidth={2.5} />
@@ -986,139 +994,110 @@ export default function App() {
                 ))}
               </div>
             </main>
-          ) : viewMode === 'holidays' ? (
-            /* =================== 祝日一覧ビュー =================== */
+          ) : (
+            /* =================== チェック一覧（全体の目標 × 1日の目標） =================== */
             <main className="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs p-6">
               <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4">
                 <div>
                   <h2 className="text-lg font-medium text-gray-800 flex items-center gap-2">
-                    <Sparkles size={20} className="text-[#137333]" />
-                    {currentYear}年の日本の祝日・振替休日一覧
+                    <Target size={20} className="text-[#1a73e8]" />
+                    目標・やること進捗一覧
                   </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">国民の祝日法に基づき自動計算された年間祝日です</p>
-                </div>
-                <button
-                  onClick={() => handleOpenCreateModal(selectedDate, '祝日')}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-[#137333] text-white text-xs font-medium rounded-lg hover:bg-[#0f5c29] transition-colors shadow-xs"
-                >
-                  <Plus size={16} />
-                  記念日・祝日を追加
-                </button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pr-1">
-                {holidayList.map((h) => (
-                  <div
-                    key={h.date}
-                    onClick={() => {
-                      setSelectedDate(h.date);
-                      const [y, m] = h.date.split('-').map(Number);
-                      setCurrentDate(new Date(y, m - 1, 1));
-                      setViewMode('month');
-                    }}
-                    className="flex items-center justify-between p-3.5 rounded-xl border border-emerald-100 bg-emerald-50/40 hover:bg-emerald-50 hover:border-emerald-300 transition-all cursor-pointer"
-                  >
-                    <div>
-                      <span className="text-sm font-semibold text-gray-800">{h.title}</span>
-                      <div className="text-xs text-gray-500 mt-1 flex items-center gap-1.5">
-                        <CalendarIcon size={12} className="text-[#137333]" />
-                        <span>{h.date}</span>
-                      </div>
-                    </div>
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#137333] text-white font-medium">
-                      祝日
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </main>
-          ) : (
-            /* =================== チェック一覧（ToDo・やること） =================== */
-            <main className="flex-1 flex flex-col bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xs p-6">
-              <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-4">
-                <div>
-                  <h2 className="text-lg font-medium text-gray-800">やること・勉強チェック一覧</h2>
-                  <p className="text-xs text-gray-500 mt-0.5">登録したやることの期間と達成状況をまとめて管理できます</p>
+                  <p className="text-xs text-gray-500 mt-0.5">全体の目標と日々の達成状況を一覧で管理できます</p>
                 </div>
                 <button
                   onClick={() => handleOpenCreateModal(selectedDate, '勉強')}
                   className="flex items-center gap-1.5 px-4 py-2 bg-[#1a73e8] text-white text-xs font-medium rounded-lg hover:bg-[#174ea6] transition-colors shadow-xs"
                 >
                   <Plus size={16} />
-                  新規やること追加
+                  新規目標を追加
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+              <div className="flex-1 overflow-y-auto space-y-3 pr-1">
                 {taskEvents.length === 0 ? (
                   <div className="h-48 flex flex-col items-center justify-center text-gray-400">
                     <CheckSquare size={36} className="mb-2 stroke-1" />
-                    <p className="text-sm">登録されているやることはありません</p>
+                    <p className="text-sm">登録されている目標はありません</p>
                   </div>
                 ) : (
                   taskEvents.map((t) => {
                     const colorObj = COLOR_OPTIONS.find(c => c.id === t.color) || COLOR_OPTIONS[0];
-                    const isMulti = t.startDate !== t.endDate;
-                    const days = calculateDaysCount(t.startDate, t.endDate);
+                    const totalDays = calculateDaysCount(t.startDate, t.endDate);
+                    const doneDaysCount = Object.values(t.completedDates || {}).filter(Boolean).length;
+                    const percent = Math.round((doneDaysCount / totalDays) * 100);
 
                     return (
                       <div
                         key={t.id}
-                        className={`flex items-center justify-between p-3.5 rounded-xl border transition-all ${
-                          t.isCompleted
-                            ? 'bg-gray-50/60 border-gray-200 text-gray-400'
-                            : 'bg-white border-gray-200 shadow-xs hover:border-blue-300'
-                        }`}
+                        className="p-4 rounded-xl border border-gray-200 bg-white shadow-xs hover:border-blue-300 transition-all"
                       >
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={(e) => handleToggleComplete(t.id, e)}
-                            className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${
-                              t.isCompleted
-                                ? 'bg-[#1a73e8] border-[#1a73e8] text-white'
-                                : 'border-gray-300 hover:border-gray-400'
-                            }`}
-                          >
-                            {t.isCompleted && <Check size={14} strokeWidth={3} />}
-                          </button>
-                          <div>
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            {/* 全体の目標 */}
                             <div className="flex items-center gap-2">
-                              <span className={`text-sm font-semibold ${t.isCompleted ? 'line-through text-gray-400' : 'text-gray-800'}`}>
-                                {t.title}
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-[#1a73e8] uppercase tracking-wider">
+                                全体の目標
+                              </span>
+                              <span className="text-base font-bold text-gray-800">
+                                {t.overallGoal}
                               </span>
                               {t.tag && (
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-[#1a73e8] border border-blue-200 font-medium">
+                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
                                   #{t.tag}
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+
+                            {/* 1日に達成する目標 */}
+                            {t.dailyGoal && (
+                              <div className="flex items-center gap-2 text-sm text-gray-700 pl-1 mt-1">
+                                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                                  1日の目標
+                                </span>
+                                <span className="font-medium text-gray-800">{t.dailyGoal}</span>
+                              </div>
+                            )}
+
+                            {/* 期間情報 */}
+                            <div className="flex items-center gap-4 text-xs text-gray-500 pt-1 pl-1">
                               <span className="flex items-center gap-1">
-                                <Clock size={12} className="text-gray-400" />
-                                <span>やる期間: {t.startDate} {isMulti ? `〜 ${t.endDate} (${days}日間)` : ''}</span>
+                                <Clock size={13} className="text-gray-400" />
+                                <span>期間: {t.startDate} 〜 {t.endDate} ({totalDays}日間)</span>
                               </span>
-                              <span className={`w-2 h-2 rounded-full ${colorObj.bg}`} />
+                              <span className="flex items-center gap-1 font-semibold text-orange-600">
+                                <Flame size={13} />
+                                <span>達成状況: {doneDaysCount} / {totalDays} 日完了 ({percent}%)</span>
+                              </span>
                             </div>
+                          </div>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => handleOpenEditModal(t, e)}
+                              className="px-2.5 py-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg text-xs font-medium transition-colors"
+                            >
+                              編集
+                            </button>
+                            <button
+                              onClick={() => {
+                                setActiveEvent(t);
+                                handleDeleteEvent();
+                              }}
+                              className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                              title="削除"
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={(e) => handleOpenEditModal(t, e)}
-                            className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-xs"
-                          >
-                            編集
-                          </button>
-                          <button
-                            onClick={() => {
-                              setActiveEvent(t);
-                              handleDeleteEvent();
-                            }}
-                            className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                            title="削除"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                        {/* 進捗プログレスバー */}
+                        <div className="mt-3 w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-300 ${percent === 100 ? 'bg-emerald-500' : 'bg-[#1a73e8]'}`}
+                            style={{ width: `${percent}%` }}
+                          />
                         </div>
                       </div>
                     );
@@ -1130,17 +1109,17 @@ export default function App() {
         </div>
       </div>
 
-      {/* やること・勉強・期間・タグ追加・編集モーダル */}
+      {/* 目標作成・編集モーダル */}
       {modalMode && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-in fade-in duration-150">
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 transform transition-all"
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100 transform transition-all"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
-                <CheckSquare size={18} className="text-[#1a73e8]" />
-                {modalMode === 'create' ? 'やること・勉強の追加' : 'やることの編集'}
+                <Target size={18} className="text-[#1a73e8]" />
+                {modalMode === 'create' ? '目標・やることの設定' : '目標・やることの編集'}
               </h3>
               <button
                 onClick={() => setModalMode(null)}
@@ -1151,51 +1130,37 @@ export default function App() {
             </div>
 
             <form onSubmit={handleSaveEvent} className="p-6 space-y-4">
-              {/* やること（タイトル） */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                  やること（内容） <span className="text-red-500">*</span>
+              {/* 1. 全体の目標 */}
+              <div className="bg-blue-50/50 p-3.5 rounded-xl border border-blue-100">
+                <label className="block text-xs font-bold text-[#1a73e8] mb-1 flex items-center gap-1.5">
+                  <Target size={14} />
+                  ① 全体の目標（ゴール） <span className="text-red-500">*</span>
                 </label>
+                <p className="text-[11px] text-gray-500 mb-2">期間全体を通して達成したい最終ゴールを入力してください</p>
                 <input
                   type="text"
                   required
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="例: 数学のワーク、英単語暗記、読書、資格試験対策"
-                  className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a73e8] focus:border-transparent transition-all"
+                  value={formData.overallGoal}
+                  onChange={(e) => setFormData({ ...formData, overallGoal: e.target.value })}
+                  placeholder="例: 単語帳1900語を完全走破、基本情報技術者過去問3年分制覇"
+                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a73e8] transition-all"
                   autoFocus
                 />
               </div>
 
-              {/* タグ選択 */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1">
-                  <TagIcon size={13} />
-                  タグ（カテゴリー）
+              {/* 2. 1日に達成する目標 */}
+              <div className="bg-emerald-50/50 p-3.5 rounded-xl border border-emerald-100">
+                <label className="block text-xs font-bold text-emerald-700 mb-1 flex items-center gap-1.5">
+                  <Flame size={14} />
+                  ② 1日に達成する目標（日々のノルマ）
                 </label>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {PRESET_TAGS.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, tag: t.name, color: t.color })}
-                      className={`text-xs px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1 ${
-                        formData.tag === t.name
-                          ? 'bg-blue-50 border-[#1a73e8] text-[#1a73e8] font-semibold'
-                          : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      <span>{t.icon}</span>
-                      <span>{t.name}</span>
-                    </button>
-                  ))}
-                </div>
+                <p className="text-[11px] text-gray-500 mb-2">カレンダーの各マスに表示され、毎日チェックできる目標です</p>
                 <input
                   type="text"
-                  value={formData.tag}
-                  onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
-                  placeholder="または自由入力（例: プログラミング、宿題）"
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#1a73e8]"
+                  value={formData.dailyGoal}
+                  onChange={(e) => setFormData({ ...formData, dailyGoal: e.target.value })}
+                  placeholder="例: 1日50単語暗記＋復習テスト、1日午前過去問20問解く"
+                  className="w-full px-3.5 py-2.5 text-sm bg-white border border-emerald-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 transition-all"
                 />
               </div>
 
@@ -1240,6 +1205,38 @@ export default function App() {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* タグ選択 */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1">
+                  <TagIcon size={13} />
+                  タグ（カテゴリー）
+                </label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {PRESET_TAGS.map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, tag: t.name, color: t.color })}
+                      className={`text-xs px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1 ${
+                        formData.tag === t.name
+                          ? 'bg-blue-50 border-[#1a73e8] text-[#1a73e8] font-semibold'
+                          : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <span>{t.icon}</span>
+                      <span>{t.name}</span>
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  value={formData.tag}
+                  onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
+                  placeholder="または自由入力（例: 資格対策、プログラミング）"
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#1a73e8]"
+                />
               </div>
 
               {/* カラー選択 */}
