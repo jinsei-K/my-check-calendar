@@ -403,23 +403,18 @@
       return { ...holidays, ...substitutes };
     }
 
-    const DEFAULT_TASKS = [
-      { id: 't-1', overallGoal: '英単語ターゲット1900 完走', dailyGoal: '1日50単語暗記＆確認テスト', startDate: '2026-11-04', endDate: '2026-11-08', tag: '', color: 'blue', completedDates: { '2026-11-04': true, '2026-11-05': true, '2026-11-06': true } },
-      { id: 't-2', overallGoal: '基本情報技術者 午前過去問 3年分制覇', dailyGoal: '午前過去問 20問解答＆見直し', startDate: '2026-11-16', endDate: '2026-11-20', tag: '', color: 'purple', completedDates: { '2026-11-16': true } },
-      { id: 't-3', overallGoal: '毎日ランニング習慣', dailyGoal: '朝3kmジョギング', startDate: '2026-11-01', endDate: '2026-11-07', tag: '', color: 'green', completedDates: { '2026-11-01': true, '2026-11-02': true, '2026-11-03': true, '2026-11-04': true } },
-    ];
+    const DEFAULT_TASKS = [];
 
     let userEvents = [];
     try {
       const saved = localStorage.getItem('check_calendar_events');
       if (saved) {
         const parsed = JSON.parse(saved);
-        userEvents = parsed.map(ev => {
-          if (ev.id && ev.id.startsWith('t-') && (ev.tag === '勉強' || ev.tag === '運動')) {
-            return { ...ev, tag: '' };
-          }
-          return ev;
-        });
+        // 初期タスク (id が 't-' で始まるサンプルデータ) を除外
+        userEvents = parsed.filter(ev => !(ev.id && ev.id.startsWith('t-')));
+        if (parsed.length !== userEvents.length) {
+          localStorage.setItem('check_calendar_events', JSON.stringify(userEvents));
+        }
       } else {
         userEvents = DEFAULT_TASKS;
       }
