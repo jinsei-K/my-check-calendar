@@ -453,15 +453,15 @@ export default function App() {
     return months;
   }, [currentYear, selectedDate, todayKey]);
 
-  const handleOpenCreateModal = (targetDate = selectedDate, defaultTag = '勉強') => {
+  const handleOpenCreateModal = (targetDate = selectedDate, defaultTag = '') => {
     setFormData({
       overallGoal: '',
       dailyGoal: '',
       startDate: targetDate,
       endDate: targetDate,
       tag: defaultTag,
-      color: defaultTag === '勉強' ? 'blue' : 'green',
-      isHoliday: defaultTag === '祝日',
+      color: 'blue',
+      isHoliday: false,
     });
     setModalMode('create');
   };
@@ -474,7 +474,7 @@ export default function App() {
       dailyGoal: ev.dailyGoal || '',
       startDate: ev.startDate || ev.date,
       endDate: ev.endDate || ev.startDate || ev.date,
-      tag: ev.tag || '勉強',
+      tag: ev.tag || '',
       color: ev.color || 'blue',
       isHoliday: !!ev.isHoliday,
     });
@@ -494,7 +494,7 @@ export default function App() {
         dailyGoal: formData.dailyGoal.trim(),
         startDate: formData.startDate,
         endDate: cleanEndDate,
-        tag: formData.tag || '勉強',
+        tag: (formData.tag || '').trim(),
         color: formData.color,
         completedDates: {},
         isHoliday: formData.isHoliday,
@@ -508,7 +508,7 @@ export default function App() {
           dailyGoal: formData.dailyGoal.trim(),
           startDate: formData.startDate,
           endDate: cleanEndDate,
-          tag: formData.tag,
+          tag: (formData.tag || '').trim(),
           color: formData.color,
           completedDates: {},
           isHoliday: formData.isHoliday,
@@ -523,7 +523,7 @@ export default function App() {
               dailyGoal: formData.dailyGoal.trim(),
               startDate: formData.startDate,
               endDate: cleanEndDate,
-              tag: formData.tag,
+              tag: (formData.tag || '').trim(),
               color: formData.color,
               isHoliday: formData.isHoliday,
             };
@@ -571,9 +571,9 @@ export default function App() {
   }, [userEvents]);
 
   const availableTags = useMemo(() => {
-    const set = new Set(['勉強', '仕事', '運動', '読書', '趣味']);
+    const set = new Set();
     userEvents.forEach(e => {
-      if (e.tag && e.tag !== '祝日') set.add(e.tag);
+      if (e.tag && e.tag.trim() && e.tag !== '祝日') set.add(e.tag.trim());
     });
     return Array.from(set);
   }, [userEvents]);
@@ -611,7 +611,7 @@ export default function App() {
             {/* + 作成 ▾ ボタン */}
             <div className="mb-3 pl-1">
               <button
-                onClick={() => handleOpenCreateModal(selectedDate, '勉強')}
+                onClick={() => handleOpenCreateModal(selectedDate, '')}
                 className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-2xl border transition-all cursor-pointer group shadow-sm ${
                   isDark
                     ? 'bg-[#2d2e30] border-[#3c4043] text-gray-200 hover:bg-[#35373a]'
@@ -642,41 +642,43 @@ export default function App() {
             </div>
 
             {/* タグフィルター */}
-            <div className="mb-4 px-1">
-              <span className={`text-[11px] font-semibold uppercase tracking-wider block mb-1.5 flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                <Filter size={12} />
-                タグで絞り込み
-              </span>
-              <div className="flex flex-wrap gap-1">
-                <button
-                  onClick={() => setSelectedFilterTag('ALL')}
-                  className={`text-[11px] px-2.5 py-1 rounded-full transition-all ${
-                    selectedFilterTag === 'ALL'
-                      ? 'bg-[#1a73e8] text-white font-medium'
-                      : isDark
-                      ? 'bg-[#303134] text-gray-300 hover:bg-[#3c4043]'
-                      : 'bg-gray-200/70 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  すべて
-                </button>
-                {availableTags.map((tag) => (
+            {availableTags.length > 0 && (
+              <div className="mb-4 px-1">
+                <span className={`text-[11px] font-semibold uppercase tracking-wider block mb-1.5 flex items-center gap-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <Filter size={12} />
+                  タグで絞り込み
+                </span>
+                <div className="flex flex-wrap gap-1">
                   <button
-                    key={tag}
-                    onClick={() => setSelectedFilterTag(tag)}
-                    className={`text-[11px] px-2.5 py-1 rounded-full transition-all flex items-center gap-1 ${
-                      selectedFilterTag === tag
+                    onClick={() => setSelectedFilterTag('ALL')}
+                    className={`text-[11px] px-2.5 py-1 rounded-full transition-all ${
+                      selectedFilterTag === 'ALL'
                         ? 'bg-[#1a73e8] text-white font-medium'
                         : isDark
-                        ? 'bg-[#252628] border border-[#3c4043] text-gray-300 hover:bg-[#303134]'
-                        : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
+                        ? 'bg-[#303134] text-gray-300 hover:bg-[#3c4043]'
+                        : 'bg-gray-200/70 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    <span>#{tag}</span>
+                    すべて
                   </button>
-                ))}
+                  {availableTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => setSelectedFilterTag(tag)}
+                      className={`text-[11px] px-2.5 py-1 rounded-full transition-all flex items-center gap-1 ${
+                        selectedFilterTag === tag
+                          ? 'bg-[#1a73e8] text-white font-medium'
+                          : isDark
+                          ? 'bg-[#252628] border border-[#3c4043] text-gray-300 hover:bg-[#303134]'
+                          : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <span>#{tag}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* ミニカレンダー */}
             <div className="px-1">
@@ -1006,7 +1008,7 @@ export default function App() {
                       key={cell.id}
                       onClick={() => {
                         setSelectedDate(cell.id);
-                        handleOpenCreateModal(cell.id, '勉強');
+                        handleOpenCreateModal(cell.id, '');
                       }}
                       className={`flex flex-col p-1 relative group transition-colors cursor-pointer overflow-hidden ${bgClass} ${
                         isColRightBorder ? (isDark ? 'border-r border-[#3c4043]/60' : 'border-r border-gray-200') : ''
@@ -1186,7 +1188,7 @@ export default function App() {
                   <p className={`text-xs mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>全体の目標と日々の達成状況を一覧で管理できます</p>
                 </div>
                 <button
-                  onClick={() => handleOpenCreateModal(selectedDate, '勉強')}
+                  onClick={() => handleOpenCreateModal(selectedDate, '')}
                   className="flex items-center gap-1.5 px-4 py-2 bg-[#1a73e8] text-white text-xs font-medium rounded-lg hover:bg-[#174ea6] transition-colors shadow-xs"
                 >
                   <Plus size={16} />
@@ -1414,32 +1416,33 @@ export default function App() {
                   <TagIcon size={13} />
                   タグ（カテゴリー）
                 </label>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {PRESET_TAGS.map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setFormData({ ...formData, tag: t.name, color: t.color })}
-                      className={`text-xs px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1 ${
-                        formData.tag === t.name
-                          ? isDark
-                            ? 'bg-blue-950/70 border-blue-500 text-blue-300 font-semibold'
-                            : 'bg-blue-50 border-[#1a73e8] text-[#1a73e8] font-semibold'
-                          : isDark
-                          ? 'bg-[#282a2d] border-[#3c4043] text-gray-300 hover:bg-[#303134]'
-                          : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      <span>{t.icon}</span>
-                      <span>{t.name}</span>
-                    </button>
-                  ))}
-                </div>
+                {availableTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {availableTags.map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, tag: t })}
+                        className={`text-xs px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1 ${
+                          formData.tag === t
+                            ? isDark
+                              ? 'bg-blue-950/70 border-blue-500 text-blue-300 font-semibold'
+                              : 'bg-blue-50 border-[#1a73e8] text-[#1a73e8] font-semibold'
+                            : isDark
+                            ? 'bg-[#282a2d] border-[#3c4043] text-gray-300 hover:bg-[#303134]'
+                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        <span>#{t}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <input
                   type="text"
                   value={formData.tag}
                   onChange={(e) => setFormData({ ...formData, tag: e.target.value })}
-                  placeholder="または自由入力（例: 資格対策、プログラミング）"
+                  placeholder="タグ名を入力（任意）"
                   className={`w-full px-3 py-1.5 text-xs rounded-lg focus:outline-none focus:ring-1 focus:ring-[#1a73e8] border ${
                     isDark ? 'bg-[#282a2d] border-[#3c4043] text-gray-200' : 'border-gray-200'
                   }`}
