@@ -313,13 +313,25 @@
 
         <!-- カラー -->
         <div>
-          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1.5">タグカラー</label>
-          <div class="flex items-center gap-3" id="colorPickerGroup">
-            <button type="button" data-color="blue" class="color-btn w-7 h-7 rounded-full bg-[#1a73e8] ring-2 ring-offset-2 ring-blue-500 scale-125 transition-all"></button>
-            <button type="button" data-color="green" class="color-btn w-7 h-7 rounded-full bg-[#137333] transition-all"></button>
-            <button type="button" data-color="red" class="color-btn w-7 h-7 rounded-full bg-[#d93025] transition-all"></button>
-            <button type="button" data-color="yellow" class="color-btn w-7 h-7 rounded-full bg-[#f9ab00] transition-all"></button>
-            <button type="button" data-color="purple" class="color-btn w-7 h-7 rounded-full bg-[#a142f4] transition-all"></button>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300">タグカラー</label>
+            <span id="colorNamePreview" class="text-[11px] font-mono text-gray-500 dark:text-gray-400">青</span>
+          </div>
+          <div class="flex items-center flex-wrap gap-2.5" id="colorPickerGroup">
+            <button type="button" data-color="blue" title="ブルー" class="preset-color-btn w-7 h-7 rounded-full transition-all flex items-center justify-center"></button>
+            <button type="button" data-color="green" title="グリーン" class="preset-color-btn w-7 h-7 rounded-full transition-all flex items-center justify-center"></button>
+            <button type="button" data-color="red" title="レッド" class="preset-color-btn w-7 h-7 rounded-full transition-all flex items-center justify-center"></button>
+            <button type="button" data-color="yellow" title="イエロー" class="preset-color-btn w-7 h-7 rounded-full transition-all flex items-center justify-center"></button>
+            <button type="button" data-color="purple" title="パープル" class="preset-color-btn w-7 h-7 rounded-full transition-all flex items-center justify-center"></button>
+            <button type="button" data-color="orange" title="オレンジ" class="preset-color-btn w-7 h-7 rounded-full transition-all flex items-center justify-center"></button>
+            <button type="button" data-color="pink" title="ピンク" class="preset-color-btn w-7 h-7 rounded-full transition-all flex items-center justify-center"></button>
+            <button type="button" data-color="cyan" title="シアン" class="preset-color-btn w-7 h-7 rounded-full transition-all flex items-center justify-center"></button>
+            
+            <!-- カスタムカラー選択 -->
+            <label id="customColorWrapper" class="relative w-7 h-7 rounded-full cursor-pointer border border-gray-300 dark:border-gray-600 hover:scale-105 transition-all flex items-center justify-center text-gray-500 dark:text-gray-400 overflow-hidden bg-gray-50 dark:bg-[#1e1e1e]" title="自由なカラーを選択">
+              <input type="color" id="customColorInput" value="#1a73e8" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer">
+              <i data-lucide="palette" class="w-3.5 h-3.5 pointer-events-none"></i>
+            </label>
           </div>
         </div>
 
@@ -364,24 +376,20 @@
           </p>
         </div>
 
-        <!-- プレビュー＆数値入力 -->
-        <div class="p-4 rounded-xl border border-gray-200 dark:border-[#3c4043] flex flex-col items-center justify-center gap-2 bg-gray-50/50 dark:bg-[#1e1e1e]/50">
+        <!-- 数値入力 -->
+        <div class="py-3 px-4 rounded-xl border border-gray-200 dark:border-[#3c4043] flex items-center justify-center bg-gray-50/50 dark:bg-[#1e1e1e]/50">
           <div class="flex items-baseline gap-1">
             <span id="progressDisplayNum" class="text-4xl font-extrabold tracking-tight font-mono text-gray-800 dark:text-gray-100">0</span>
             <span class="text-lg font-bold text-gray-500 dark:text-gray-400">%</span>
-          </div>
-          <!-- プレビューバー/ボックス -->
-          <div id="progressPreviewBox" class="w-full h-9 rounded-lg border flex items-center justify-center text-xs font-semibold transition-all duration-150 shadow-inner px-2 text-center">
-            できた度合プレビュー
           </div>
         </div>
 
         <!-- スライダー -->
         <div>
           <div class="flex justify-between text-[11px] text-gray-400 mb-1.5 font-mono">
-            <span>0% (白)</span>
+            <span>0%</span>
             <span>50%</span>
-            <span>100% (最も濃い)</span>
+            <span>100%</span>
           </div>
           <input id="progressSlider" type="range" min="0" max="100" step="5" class="w-full accent-[#1a73e8] cursor-pointer">
         </div>
@@ -563,12 +571,37 @@
 
     const weekDayNames = ['日', '月', '火', '水', '木', '金', '土'];
 
+    const colorHexMap = {
+      blue: '#1a73e8',
+      green: '#137333',
+      red: '#d93025',
+      yellow: '#f9ab00',
+      purple: '#a142f4',
+      orange: '#ea580c',
+      pink: '#db2777',
+      cyan: '#0891b2',
+    };
+
+    const colorNames = {
+      blue: '青',
+      green: '緑',
+      red: '赤',
+      yellow: '黄',
+      purple: '紫',
+      orange: 'オレンジ',
+      pink: 'ピンク',
+      cyan: 'シアン',
+    };
+
     const colorClasses = {
       green: { bg: 'bg-[#137333]', border: 'border-[#137333]', text: 'text-white' },
       blue: { bg: 'bg-[#1a73e8]', border: 'border-[#1a73e8]', text: 'text-white' },
       red: { bg: 'bg-[#d93025]', border: 'border-[#d93025]', text: 'text-white' },
       yellow: { bg: 'bg-[#f9ab00]', border: 'border-[#f9ab00]', text: 'text-[#202124]' },
       purple: { bg: 'bg-[#a142f4]', border: 'border-[#a142f4]', text: 'text-white' },
+      orange: { bg: 'bg-[#ea580c]', border: 'border-[#ea580c]', text: 'text-white' },
+      pink: { bg: 'bg-[#db2777]', border: 'border-[#db2777]', text: 'text-white' },
+      cyan: { bg: 'bg-[#0891b2]', border: 'border-[#0891b2]', text: 'text-white' },
     };
 
     const baseColors = {
@@ -577,7 +610,28 @@
       red: [217, 48, 37],      // #d93025
       yellow: [249, 171, 0],   // #f9ab00
       purple: [161, 66, 244],  // #a142f4
+      orange: [234, 88, 12],   // #ea580c
+      pink: [219, 39, 119],    // #db2777
+      cyan: [8, 145, 178],     // #0891b2
     };
+
+    function getColorHex(colorKey) {
+      if (colorHexMap[colorKey]) return colorHexMap[colorKey];
+      if (typeof colorKey === 'string' && colorKey.startsWith('#')) return colorKey;
+      return '#1a73e8';
+    }
+
+    function colorToRgb(colorKey) {
+      if (baseColors[colorKey]) return baseColors[colorKey];
+      const hex = getColorHex(colorKey);
+      let cleanHex = hex.replace('#', '');
+      if (cleanHex.length === 3) cleanHex = cleanHex.split('').map(c => c + c).join('');
+      const num = parseInt(cleanHex, 16);
+      if (!isNaN(num)) {
+        return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+      }
+      return baseColors.blue;
+    }
 
     // タスクの日付ごとの達成度（0〜100%）を取得
     function getTaskDailyProgress(ev, dateKey) {
@@ -588,79 +642,29 @@
       return 0;
     }
 
-    // 達成度（0%〜100%）に応じたスタイルを計算（0%が白で増えるごとに濃くなる）
+    // タスクのタグカラーに応じたスタイルを取得（達成度によらず設定された一定のタグカラーを維持）
     function getTaskItemStyle(colorKey, percent, isDark) {
-      const rgb = baseColors[colorKey] || baseColors.blue;
-      const p = Math.max(0, Math.min(100, Math.round(percent || 0)));
+      const hex = getColorHex(colorKey);
+      const rgb = colorToRgb(colorKey);
 
-      if (p === 0) {
-        if (isDark) {
-          return {
-            bg: '#1e1e1e',
-            border: '#3c4043',
-            text: '#e2e8f0',
-            subText: '#9ca3af',
-            badgeBg: '#282a2d',
-            badgeBorder: '#3c4043',
-            badgeText: '#9ca3af'
-          };
-        } else {
-          return {
-            bg: '#ffffff',
-            border: '#e2e8f0',
-            text: '#1f2937',
-            subText: '#6b7280',
-            badgeBg: '#f3f4f6',
-            badgeBorder: '#e5e7eb',
-            badgeText: '#6b7280'
-          };
-        }
-      }
+      // 背景の明るさ（輝度）を計算して文字色・バッジ色を自動調整（黄色など明るい色は黒文字、濃い色は白文字）
+      const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+      const isLightBg = luminance > 0.68;
 
-      const ratio = p / 100;
-      if (isDark) {
-        const startR = 30, startG = 30, startB = 30;
-        const r = Math.round(startR + (rgb[0] - startR) * ratio);
-        const g = Math.round(startG + (rgb[1] - startG) * ratio);
-        const b = Math.round(startB + (rgb[2] - startB) * ratio);
+      const textColor = isLightBg ? '#1f2937' : '#ffffff';
+      const subTextColor = isLightBg ? 'rgba(31, 41, 55, 0.8)' : 'rgba(255, 255, 255, 0.85)';
+      const badgeBg = isLightBg ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.25)';
+      const badgeBorder = isLightBg ? 'rgba(0, 0, 0, 0.18)' : 'rgba(255, 255, 255, 0.35)';
 
-        const borderR = Math.min(255, Math.round(r + 35));
-        const borderG = Math.min(255, Math.round(g + 35));
-        const borderB = Math.min(255, Math.round(b + 35));
-
-        return {
-          bg: `rgb(${r}, ${g}, ${b})`,
-          border: `rgb(${borderR}, ${borderG}, ${borderB})`,
-          text: '#ffffff',
-          subText: 'rgba(255, 255, 255, 0.85)',
-          badgeBg: 'rgba(0, 0, 0, 0.35)',
-          badgeBorder: 'rgba(255, 255, 255, 0.3)',
-          badgeText: '#ffffff'
-        };
-      } else {
-        // 白 (255, 255, 255) からベースカラーへの線形補間（0%は純白、増えるごとに濃くなる）
-        const r = Math.round(255 + (rgb[0] - 255) * ratio);
-        const g = Math.round(255 + (rgb[1] - 255) * ratio);
-        const b = Math.round(255 + (rgb[2] - 255) * ratio);
-
-        const borderR = Math.round(226 + (rgb[0] - 226) * ratio);
-        const borderG = Math.round(232 + (rgb[1] - 232) * ratio);
-        const borderB = Math.round(240 + (rgb[2] - 240) * ratio);
-
-        // 輝度に応じて文字色を決定
-        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        const isLight = luminance > 0.65;
-
-        return {
-          bg: `rgb(${r}, ${g}, ${b})`,
-          border: `rgb(${borderR}, ${borderG}, ${borderB})`,
-          text: isLight ? '#1f2937' : '#ffffff',
-          subText: isLight ? '#4b5563' : 'rgba(255, 255, 255, 0.85)',
-          badgeBg: isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.25)',
-          badgeBorder: isLight ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.4)',
-          badgeText: isLight ? '#1f2937' : '#ffffff'
-        };
-      }
+      return {
+        bg: hex,
+        border: hex,
+        text: textColor,
+        subText: subTextColor,
+        badgeBg: badgeBg,
+        badgeBorder: badgeBorder,
+        badgeText: textColor
+      };
     }
 
     // 日付ごとの達成度を計算（各タスクの達成度 0〜100% の平均）
@@ -1028,7 +1032,7 @@
             : (isDark ? 'bg-[#282a2d] border-[#3c4043]' : 'bg-white border-gray-200')
         } hover:shadow-xs`;
 
-        const tagBadge = ev.tag ? `<span class="text-[11px] px-2 py-0.5 rounded-full font-medium ${c.bg} text-white">#${ev.tag}</span>` : '';
+        const tagBadge = ev.tag ? `<span class="text-[11px] px-2 py-0.5 rounded-full font-medium text-white shadow-2xs" style="background-color: ${getColorHex(ev.color)};">#${ev.tag}</span>` : '';
 
         // 各日の達成度チップ
         const chipsHtml = dateList.map(dKey => {
@@ -1077,7 +1081,7 @@
           <div class="mt-3 pt-2.5 border-t border-gray-100 dark:border-[#3c4043]/60">
             <div class="text-[11px] text-gray-400 mb-1.5 flex items-center justify-between">
               <span>日ごとの達成度（ダブルクリックで入力）</span>
-              <span class="text-[10px]">0%: 白 〜 100%: 濃</span>
+              <span class="text-[10px] font-mono">0%〜100%</span>
             </div>
             <div class="flex flex-wrap gap-1.5">
               ${chipsHtml}
@@ -1173,28 +1177,11 @@
     const progressModal = document.getElementById('progressModal');
     const progressSlider = document.getElementById('progressSlider');
     const progressDisplayNum = document.getElementById('progressDisplayNum');
-    const progressPreviewBox = document.getElementById('progressPreviewBox');
 
     function updateProgressModalPreview(val) {
       const p = Math.max(0, Math.min(100, Math.round(Number(val) || 0)));
       progressDisplayNum.textContent = p;
       progressSlider.value = p;
-
-      const ev = userEvents.find(e => e.id === currentProgressEventId);
-      const colorKey = ev ? ev.color : 'blue';
-      const isDark = currentTheme === 'dark';
-      const style = getTaskItemStyle(colorKey, p, isDark);
-
-      progressPreviewBox.style.backgroundColor = style.bg;
-      progressPreviewBox.style.borderColor = style.border;
-      progressPreviewBox.style.color = style.text;
-      if (p === 0) {
-        progressPreviewBox.textContent = '0% (白 - 未着手)';
-      } else if (p === 100) {
-        progressPreviewBox.textContent = '100% (最も濃い色 - 完全達成！🌟)';
-      } else {
-        progressPreviewBox.textContent = `${p}% (できた度合に合わせて濃くなります)`;
-      }
     }
 
     function openProgressModal(eventId, dateKey) {
@@ -1221,7 +1208,8 @@
       const tagEl = document.getElementById('progressModalTag');
       if (ev.tag) {
         tagEl.textContent = `#${ev.tag}`;
-        tagEl.className = `text-[10px] font-medium px-2 py-0.5 rounded-full ${colorClasses[ev.color]?.bg || 'bg-blue-600'} text-white`;
+        tagEl.className = 'text-[10px] font-medium px-2 py-0.5 rounded-full text-white shadow-2xs';
+        tagEl.style.backgroundColor = getColorHex(ev.color);
         tagEl.classList.remove('hidden');
       } else {
         tagEl.classList.add('hidden');
@@ -1300,13 +1288,15 @@
       group.appendChild(allBtn);
 
       tags.forEach(t => {
+        const matchingEv = userEvents.find(x => x.tag === t);
+        const tagHex = getColorHex(matchingEv?.color || 'blue');
         const btn = document.createElement('button');
-        btn.className = `filter-btn text-[11px] px-2.5 py-1 rounded-full transition-all ${
+        btn.className = `filter-btn text-[11px] px-2.5 py-1 rounded-full transition-all flex items-center gap-1.5 ${
           selectedFilterTag === t
-            ? 'bg-[#1a73e8] text-white font-medium'
+            ? 'bg-[#1a73e8] text-white font-medium shadow-xs'
             : 'bg-white dark:bg-[#282a2d] border border-gray-200 dark:border-[#3c4043] text-gray-700 dark:text-gray-200 hover:border-gray-300'
         }`;
-        btn.textContent = `#${t}`;
+        btn.innerHTML = `<span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${tagHex}"></span><span>#${t}</span>`;
         btn.onclick = () => {
           selectedFilterTag = t;
           renderView();
@@ -1326,17 +1316,23 @@
       container.classList.remove('hidden');
       container.innerHTML = '';
       tags.forEach(t => {
+        const matchingEv = userEvents.find(x => x.tag === t);
+        const tagHex = getColorHex(matchingEv?.color || 'blue');
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = `text-xs px-2.5 py-1 rounded-lg border transition-all ${
+        btn.className = `text-xs px-2.5 py-1 rounded-lg border transition-all flex items-center gap-1.5 ${
           currentTagVal === t
             ? 'bg-blue-50 dark:bg-blue-900/40 border-[#1a73e8] text-[#1a73e8] dark:text-[#8ab4f8] font-semibold'
             : 'bg-gray-50 dark:bg-[#1e1e1e] border-gray-200 dark:border-[#3c4043] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#3c4043]'
         }`;
-        btn.textContent = `#${t}`;
+        btn.innerHTML = `<span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${tagHex}"></span><span>#${t}</span>`;
         btn.onclick = () => {
           document.getElementById('eventTagInput').value = t;
           renderModalExistingTags(t);
+          if (matchingEv && matchingEv.color) {
+            currentColor = matchingEv.color;
+            updateColorPicker();
+          }
         };
         container.appendChild(btn);
       });
@@ -1412,21 +1408,74 @@
     };
 
     function updateColorPicker() {
-      document.querySelectorAll('.color-btn').forEach(btn => {
-        if (btn.dataset.color === currentColor) {
-          btn.className = `color-btn w-7 h-7 rounded-full bg-[${btn.dataset.color}] ring-2 ring-offset-2 ring-blue-500 scale-125 transition-all`;
+      const selectedHex = getColorHex(currentColor);
+      const isPreset = !!colorHexMap[currentColor];
+
+      document.querySelectorAll('.preset-color-btn').forEach(btn => {
+        const c = btn.dataset.color;
+        const hex = colorHexMap[c] || c;
+        btn.style.backgroundColor = hex;
+        if (currentColor === c) {
+          btn.className = 'preset-color-btn w-7 h-7 rounded-full ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-[#282a2d] scale-110 shadow-md transition-all flex items-center justify-center text-white';
+          btn.innerHTML = '<svg class="w-3.5 h-3.5 drop-shadow" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>';
         } else {
-          btn.className = `color-btn w-7 h-7 rounded-full bg-[${btn.dataset.color}] transition-all`;
+          btn.className = 'preset-color-btn w-7 h-7 rounded-full hover:scale-105 transition-all flex items-center justify-center';
+          btn.innerHTML = '';
         }
       });
+
+      const customInput = document.getElementById('customColorInput');
+      const customWrapper = document.getElementById('customColorWrapper');
+      if (customWrapper && customInput) {
+        if (!isPreset) {
+          customInput.value = selectedHex;
+          customWrapper.style.backgroundColor = selectedHex;
+          customWrapper.className = 'relative w-7 h-7 rounded-full cursor-pointer ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-[#282a2d] scale-110 shadow-md transition-all flex items-center justify-center text-white overflow-hidden';
+          customWrapper.innerHTML = `<input type="color" id="customColorInput" value="${selectedHex}" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer"><svg class="w-3.5 h-3.5 drop-shadow pointer-events-none" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>`;
+          bindCustomColor();
+        } else {
+          customWrapper.style.backgroundColor = '';
+          customWrapper.className = 'relative w-7 h-7 rounded-full cursor-pointer border border-gray-300 dark:border-gray-600 hover:scale-105 transition-all flex items-center justify-center text-gray-500 dark:text-gray-400 overflow-hidden bg-gray-50 dark:bg-[#1e1e1e]';
+          customWrapper.innerHTML = `<input type="color" id="customColorInput" value="${selectedHex}" class="opacity-0 absolute inset-0 w-full h-full cursor-pointer"><i data-lucide="palette" class="w-3.5 h-3.5 pointer-events-none"></i>`;
+          bindCustomColor();
+          lucide.createIcons();
+        }
+      }
+
+      const namePreview = document.getElementById('colorNamePreview');
+      if (namePreview) {
+        namePreview.textContent = colorNames[currentColor] || currentColor;
+        namePreview.style.color = selectedHex;
+      }
     }
 
-    document.querySelectorAll('.color-btn').forEach(btn => {
+    function bindCustomColor() {
+      const input = document.getElementById('customColorInput');
+      if (input) {
+        input.oninput = (e) => {
+          currentColor = e.target.value;
+          updateColorPicker();
+        };
+      }
+    }
+
+    document.querySelectorAll('.preset-color-btn').forEach(btn => {
       btn.onclick = () => {
         currentColor = btn.dataset.color;
         updateColorPicker();
       };
     });
+    bindCustomColor();
+
+    document.getElementById('eventTagInput').oninput = (e) => {
+      const val = e.target.value.trim();
+      renderModalExistingTags(val);
+      const matchingEv = userEvents.find(x => x.tag && x.tag.trim() === val);
+      if (matchingEv && matchingEv.color) {
+        currentColor = matchingEv.color;
+        updateColorPicker();
+      }
+    };
 
     form.onsubmit = (e) => {
       e.preventDefault();
@@ -1451,6 +1500,13 @@
               color: currentColor
             };
           }
+          // 同じタグを持つ他の目標のタグカラーも連動して一括更新
+          if (tag && item.tag === tag) {
+            return {
+              ...item,
+              color: currentColor
+            };
+          }
           return item;
         });
       } else {
@@ -1464,6 +1520,14 @@
           color: currentColor,
           completedDates: {}
         });
+        if (tag) {
+          userEvents = userEvents.map(item => {
+            if (item.tag === tag) {
+              return { ...item, color: currentColor };
+            }
+            return item;
+          });
+        }
       }
 
       saveUserEvents();
