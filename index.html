@@ -337,6 +337,79 @@
     </div>
   </div>
 
+  <!-- できた度合（達成度）入力モーダル -->
+  <div id="progressModal" class="fixed inset-0 bg-black/50 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="bg-white dark:bg-[#282a2d] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100 dark:border-[#3c4043]" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between px-5 py-4 bg-gray-50 dark:bg-[#202124] border-b border-gray-100 dark:border-[#3c4043]">
+        <div class="flex items-center gap-2">
+          <i data-lucide="gauge" class="w-4 h-4 text-[#1a73e8] dark:text-[#8ab4f8]"></i>
+          <h3 class="text-sm font-semibold text-gray-800 dark:text-gray-100">できた度合（達成度）の入力</h3>
+        </div>
+        <button id="progressModalCloseBtn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-[#3c4043] text-gray-500 dark:text-gray-400">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <!-- 対象目標と日付 -->
+        <div>
+          <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
+            <span id="progressModalDate" class="font-mono font-medium"></span>
+            <span id="progressModalTag" class="text-[10px] font-medium px-2 py-0.5 rounded-full hidden"></span>
+          </div>
+          <h4 id="progressModalOverallGoal" class="text-sm font-bold text-gray-800 dark:text-gray-100 truncate"></h4>
+          <p id="progressModalDailyGoal" class="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1">
+            <i data-lucide="flame" class="w-3 h-3"></i>
+            <span id="progressModalDailyGoalText"></span>
+          </p>
+        </div>
+
+        <!-- プレビュー＆数値入力 -->
+        <div class="p-4 rounded-xl border border-gray-200 dark:border-[#3c4043] flex flex-col items-center justify-center gap-2 bg-gray-50/50 dark:bg-[#1e1e1e]/50">
+          <div class="flex items-baseline gap-1">
+            <span id="progressDisplayNum" class="text-4xl font-extrabold tracking-tight font-mono text-gray-800 dark:text-gray-100">0</span>
+            <span class="text-lg font-bold text-gray-500 dark:text-gray-400">%</span>
+          </div>
+          <!-- プレビューバー/ボックス -->
+          <div id="progressPreviewBox" class="w-full h-9 rounded-lg border flex items-center justify-center text-xs font-semibold transition-all duration-150 shadow-inner px-2 text-center">
+            できた度合プレビュー
+          </div>
+        </div>
+
+        <!-- スライダー -->
+        <div>
+          <div class="flex justify-between text-[11px] text-gray-400 mb-1.5 font-mono">
+            <span>0% (白)</span>
+            <span>50%</span>
+            <span>100% (最も濃い)</span>
+          </div>
+          <input id="progressSlider" type="range" min="0" max="100" step="5" class="w-full accent-[#1a73e8] cursor-pointer">
+        </div>
+
+        <!-- クイック選択ボタン -->
+        <div class="grid grid-cols-5 gap-1.5 pt-1">
+          <button type="button" class="quick-rate-btn py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-[#3c4043] hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors" data-rate="0">0%</button>
+          <button type="button" class="quick-rate-btn py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-[#3c4043] hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors" data-rate="25">25%</button>
+          <button type="button" class="quick-rate-btn py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-[#3c4043] hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors" data-rate="50">50%</button>
+          <button type="button" class="quick-rate-btn py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-[#3c4043] hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors" data-rate="75">75%</button>
+          <button type="button" class="quick-rate-btn py-1.5 text-xs font-medium rounded-lg border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-colors font-bold" data-rate="100">100%</button>
+        </div>
+
+        <!-- フッターボタン -->
+        <div class="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-[#3c4043]">
+          <button type="button" id="progressEditGoalBtn" class="text-xs text-gray-500 hover:text-[#1a73e8] dark:hover:text-[#8ab4f8] flex items-center gap-1 transition-colors">
+            <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+            目標設定
+          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" id="progressCancelBtn" class="px-3.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#3c4043] rounded-lg">キャンセル</button>
+            <button type="button" id="progressSaveBtn" class="px-4 py-1.5 text-xs font-medium bg-[#1a73e8] hover:bg-[#174ea6] text-white rounded-lg shadow-xs">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     function formatDateKey(y, m, d) {
       return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
@@ -348,6 +421,19 @@
       const d2 = new Date(end);
       const diff = Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24)) + 1;
       return diff > 0 ? diff : 1;
+    }
+
+    function getDatesInRange(startDate, endDate) {
+      if (!startDate) return [];
+      const end = endDate || startDate;
+      const dates = [];
+      const cur = new Date(startDate);
+      const stop = new Date(end);
+      while (cur <= stop) {
+        dates.push(formatDateKey(cur.getFullYear(), cur.getMonth() + 1, cur.getDate()));
+        cur.setDate(cur.getDate() + 1);
+      }
+      return dates;
     }
 
     function getJapaneseHolidays(year) {
@@ -485,7 +571,99 @@
       purple: { bg: 'bg-[#a142f4]', border: 'border-[#a142f4]', text: 'text-white' },
     };
 
-    // 日付ごとの達成度を計算（0.0〜1.0）
+    const baseColors = {
+      blue: [26, 115, 232],    // #1a73e8
+      green: [19, 115, 51],    // #137333
+      red: [217, 48, 37],      // #d93025
+      yellow: [249, 171, 0],   // #f9ab00
+      purple: [161, 66, 244],  // #a142f4
+    };
+
+    // タスクの日付ごとの達成度（0〜100%）を取得
+    function getTaskDailyProgress(ev, dateKey) {
+      if (!ev || !ev.completedDates) return 0;
+      const val = ev.completedDates[dateKey];
+      if (typeof val === 'number') return Math.max(0, Math.min(100, Math.round(val)));
+      if (val === true) return 100;
+      return 0;
+    }
+
+    // 達成度（0%〜100%）に応じたスタイルを計算（0%が白で増えるごとに濃くなる）
+    function getTaskItemStyle(colorKey, percent, isDark) {
+      const rgb = baseColors[colorKey] || baseColors.blue;
+      const p = Math.max(0, Math.min(100, Math.round(percent || 0)));
+
+      if (p === 0) {
+        if (isDark) {
+          return {
+            bg: '#1e1e1e',
+            border: '#3c4043',
+            text: '#e2e8f0',
+            subText: '#9ca3af',
+            badgeBg: '#282a2d',
+            badgeBorder: '#3c4043',
+            badgeText: '#9ca3af'
+          };
+        } else {
+          return {
+            bg: '#ffffff',
+            border: '#e2e8f0',
+            text: '#1f2937',
+            subText: '#6b7280',
+            badgeBg: '#f3f4f6',
+            badgeBorder: '#e5e7eb',
+            badgeText: '#6b7280'
+          };
+        }
+      }
+
+      const ratio = p / 100;
+      if (isDark) {
+        const startR = 30, startG = 30, startB = 30;
+        const r = Math.round(startR + (rgb[0] - startR) * ratio);
+        const g = Math.round(startG + (rgb[1] - startG) * ratio);
+        const b = Math.round(startB + (rgb[2] - startB) * ratio);
+
+        const borderR = Math.min(255, Math.round(r + 35));
+        const borderG = Math.min(255, Math.round(g + 35));
+        const borderB = Math.min(255, Math.round(b + 35));
+
+        return {
+          bg: `rgb(${r}, ${g}, ${b})`,
+          border: `rgb(${borderR}, ${borderG}, ${borderB})`,
+          text: '#ffffff',
+          subText: 'rgba(255, 255, 255, 0.85)',
+          badgeBg: 'rgba(0, 0, 0, 0.35)',
+          badgeBorder: 'rgba(255, 255, 255, 0.3)',
+          badgeText: '#ffffff'
+        };
+      } else {
+        // 白 (255, 255, 255) からベースカラーへの線形補間（0%は純白、増えるごとに濃くなる）
+        const r = Math.round(255 + (rgb[0] - 255) * ratio);
+        const g = Math.round(255 + (rgb[1] - 255) * ratio);
+        const b = Math.round(255 + (rgb[2] - 255) * ratio);
+
+        const borderR = Math.round(226 + (rgb[0] - 226) * ratio);
+        const borderG = Math.round(232 + (rgb[1] - 232) * ratio);
+        const borderB = Math.round(240 + (rgb[2] - 240) * ratio);
+
+        // 輝度に応じて文字色を決定
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        const isLight = luminance > 0.65;
+
+        return {
+          bg: `rgb(${r}, ${g}, ${b})`,
+          border: `rgb(${borderR}, ${borderG}, ${borderB})`,
+          text: isLight ? '#1f2937' : '#ffffff',
+          subText: isLight ? '#4b5563' : 'rgba(255, 255, 255, 0.85)',
+          badgeBg: isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.25)',
+          badgeBorder: isLight ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.4)',
+          badgeText: isLight ? '#1f2937' : '#ffffff'
+        };
+      }
+    }
+
+    // 日付ごとの達成度を計算（各タスクの達成度 0〜100% の平均）
     function getDayAchievement(dateKey) {
       const tasksOnDate = userEvents.filter(ev => {
         if (ev.isHoliday) return false;
@@ -494,9 +672,17 @@
         return s <= dateKey && dateKey <= e;
       });
 
-      if (tasksOnDate.length === 0) return { hasTask: false, total: 0, completed: 0, rate: 0 };
-      const completed = tasksOnDate.filter(ev => !!ev.completedDates?.[dateKey]).length;
-      return { hasTask: true, total: tasksOnDate.length, completed, rate: completed / tasksOnDate.length };
+      if (tasksOnDate.length === 0) return { hasTask: false, total: 0, completed: 0, rate: 0, percent: 0 };
+      const sumProgress = tasksOnDate.reduce((sum, ev) => sum + getTaskDailyProgress(ev, dateKey), 0);
+      const avgRate = sumProgress / (tasksOnDate.length * 100);
+      const completed = tasksOnDate.filter(ev => getTaskDailyProgress(ev, dateKey) > 0).length;
+      return {
+        hasTask: true,
+        total: tasksOnDate.length,
+        completed,
+        rate: avgRate,
+        percent: Math.round(avgRate * 100)
+      };
     }
 
     // 月表示用セル背景色クラス（ライト / ダーク対応）
@@ -509,10 +695,13 @@
       if (ach.rate === 1.0) {
         return isDark ? 'bg-[#1b4721]/90 border-emerald-500/50' : 'bg-[#d9f99d]/75 border-lime-300';
       }
-      if (ach.rate >= 0.5) {
-        return isDark ? 'bg-[#143d1a]/80 border-emerald-600/40' : 'bg-[#ecfccb]/70 border-lime-200';
+      if (ach.rate >= 0.7) {
+        return isDark ? 'bg-[#183f1d]/85 border-emerald-600/40' : 'bg-[#ecfccb]/70 border-lime-200';
       }
-      return isDark ? 'bg-[#0f2e14]/70 border-emerald-700/30' : 'bg-[#f7fee7]/70 border-lime-100';
+      if (ach.rate >= 0.3) {
+        return isDark ? 'bg-[#123116]/80 border-emerald-700/35' : 'bg-[#f7fee7]/80 border-lime-100';
+      }
+      return isDark ? 'bg-[#0e2712]/70 border-emerald-800/30' : 'bg-[#fcfffa]/90 border-lime-50';
     }
 
     // 年表示用日付スタイル（ライト / ダーク対応）
@@ -524,8 +713,9 @@
       const ach = getDayAchievement(dateKey);
       if (ach.hasTask && ach.rate > 0) {
         if (ach.rate === 1.0) return isDark ? 'bg-[#2ea043] text-white font-bold shadow-xs' : 'bg-[#84cc16] text-white font-bold shadow-xs';
-        if (ach.rate >= 0.5) return isDark ? 'bg-[#238636] text-white font-semibold' : 'bg-[#bef264] text-lime-900 font-semibold';
-        return isDark ? 'bg-[#0e4429] text-gray-200 font-medium' : 'bg-[#d9f99d] text-lime-800 font-medium';
+        if (ach.rate >= 0.7) return isDark ? 'bg-[#238636] text-white font-semibold' : 'bg-[#bef264] text-lime-900 font-semibold';
+        if (ach.rate >= 0.3) return isDark ? 'bg-[#1a6428] text-white' : 'bg-[#d9f99d] text-lime-800 font-medium';
+        return isDark ? 'bg-[#0e4429] text-gray-200 font-medium' : 'bg-[#ecfccb] text-lime-800 font-medium';
       }
 
       if (!isCurrent) return isDark ? 'text-gray-600 hover:bg-[#282a2d]' : 'text-gray-300 hover:bg-gray-50';
@@ -662,7 +852,7 @@
         const dateHeader = document.createElement('div');
         dateHeader.className = 'flex justify-between items-center h-6 px-1 mb-1 shrink-0';
 
-        const badgeLeft = ach.hasTask ? `<span class="text-[9px] font-bold px-1 rounded-sm ${ach.rate === 1.0 ? 'bg-[#84cc16] text-white' : ach.rate > 0 ? (isDark ? 'bg-emerald-800 text-emerald-100' : 'bg-lime-200 text-lime-900') : (isDark ? 'text-gray-500' : 'text-gray-400')}">${ach.completed}/${ach.total}</span>` : '<div class="w-4"></div>';
+        const badgeLeft = ach.hasTask ? `<span class="text-[9px] font-bold px-1 rounded-sm ${ach.rate === 1.0 ? 'bg-[#84cc16] text-white' : ach.rate > 0 ? (isDark ? 'bg-emerald-800 text-emerald-100' : 'bg-lime-200 text-lime-900') : (isDark ? 'text-gray-500' : 'text-gray-400')}">${ach.percent}%</span>` : '<div class="w-4"></div>';
         const starRight = (ach.hasTask && ach.rate === 1.0) ? '<span class="text-[10px]" title="全タスク達成！">🌟</span>' : '<div class="w-4"></div>';
 
         dateHeader.innerHTML = `${badgeLeft}${dayNumHtml}${starRight}`;
@@ -684,36 +874,39 @@
 
         dayEvents.forEach(ev => {
           if (ev.isHoliday) return;
-          const c = colorClasses[ev.color] || colorClasses.blue;
-          const isDailyDone = !!ev.completedDates?.[cell.dateKey];
+          const progress = getTaskDailyProgress(ev, cell.dateKey);
+          const style = getTaskItemStyle(ev.color, progress, isDark);
 
           const evEl = document.createElement('div');
-          evEl.className = `flex flex-col p-1 text-[11px] leading-tight font-normal rounded shadow-xs transition-all cursor-pointer border ${
-            isDailyDone
-              ? (isDark ? 'bg-emerald-950/40 border-emerald-800/60 text-gray-400' : 'bg-lime-50/90 border-lime-300 text-gray-500')
-              : `${c.bg} text-white ${c.border}`
-          } hover:brightness-95`;
-          evEl.title = `【全体の目標】${ev.overallGoal}\n【1日の目標】${ev.dailyGoal || 'なし'}`;
+          evEl.className = 'flex flex-col p-1 text-[11px] leading-tight font-normal rounded-md shadow-2xs transition-all cursor-pointer border hover:shadow-xs';
+          evEl.style.backgroundColor = style.bg;
+          evEl.style.borderColor = style.border;
+          evEl.style.color = style.text;
+
+          evEl.title = `【ダブルクリックでできた度合を入力】\n【全体の目標】${ev.overallGoal}\n【1日の目標】${ev.dailyGoal || 'なし'}\nできた度合: ${progress}%`;
 
           const displayTarget = ev.dailyGoal ? ev.dailyGoal : ev.overallGoal;
-          const subTargetHtml = ev.dailyGoal ? `<div class="text-[9px] truncate pl-4.5 mt-0.5 flex items-center gap-1 ${isDailyDone ? (isDark ? 'text-gray-500' : 'text-gray-400') : 'text-white/80'}"><span class="truncate">🎯 ${ev.overallGoal}</span></div>` : '';
+          const subTargetHtml = ev.dailyGoal ? `<div class="text-[9px] truncate mt-0.5" style="color: ${style.subText}"><span class="truncate">🎯 ${ev.overallGoal}</span></div>` : '';
 
           evEl.innerHTML = `
-            <div class="flex items-center gap-1">
-              <button class="w-3.5 h-3.5 rounded flex items-center justify-center border shrink-0 transition-colors ${
-                isDailyDone ? 'bg-[#84cc16] dark:bg-[#2ea043] border-[#84cc16] dark:border-[#2ea043] text-white shadow-2xs' : 'bg-white/20 border-white/80 hover:bg-white/40 text-white'
-              }" onclick="event.stopPropagation(); toggleDailyComplete('${ev.id}', '${cell.dateKey}')">
-                ${isDailyDone ? '<svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>' : ''}
-              </button>
-              <span class="truncate font-medium ${isDailyDone ? (isDark ? 'line-through text-gray-400' : 'line-through text-gray-500') : 'text-white'}">${displayTarget}</span>
+            <div class="flex items-center justify-between gap-1 w-full">
+              <span class="truncate font-medium">${displayTarget}</span>
+              <span class="text-[9px] font-mono font-bold px-1 py-0.2 rounded shrink-0 border" style="background-color: ${style.badgeBg}; border-color: ${style.badgeBorder}; color: ${style.badgeText};">${progress}%</span>
             </div>
             ${subTargetHtml}
           `;
 
+          // ダブルクリックでできた度合を入力モーダルを開く
+          evEl.ondblclick = (e) => {
+            e.stopPropagation();
+            openProgressModal(ev.id, cell.dateKey);
+          };
+
+          // クリックでの誤動作防止（シングルクリックでセル全体のモーダルが開かないようにする）
           evEl.onclick = (e) => {
             e.stopPropagation();
-            openEditModal(ev);
           };
+
           eventsContainer.appendChild(evEl);
         });
 
@@ -797,8 +990,13 @@
       userEvents.forEach(ev => {
         const c = colorClasses[ev.color] || colorClasses.blue;
         const totalDays = calculateDaysCount(ev.startDate, ev.endDate);
-        const doneDays = Object.keys(ev.completedDates || {}).length;
-        const progressRate = totalDays > 0 ? Math.round((doneDays / totalDays) * 100) : 0;
+        const dateList = getDatesInRange(ev.startDate, ev.endDate);
+        let totalProgressSum = 0;
+        dateList.forEach(dKey => {
+          totalProgressSum += getTaskDailyProgress(ev, dKey);
+        });
+        const progressRate = totalDays > 0 ? Math.round(totalProgressSum / totalDays) : 0;
+        const earnedDaysEquiv = (totalProgressSum / 100).toFixed(1);
 
         const card = document.createElement('div');
         card.className = `p-4 rounded-xl border transition-all ${
@@ -808,6 +1006,21 @@
         } hover:shadow-xs`;
 
         const tagBadge = ev.tag ? `<span class="text-[11px] px-2 py-0.5 rounded-full font-medium ${c.bg} text-white">#${ev.tag}</span>` : '';
+
+        // 各日の達成度チップ
+        const chipsHtml = dateList.map(dKey => {
+          const prog = getTaskDailyProgress(ev, dKey);
+          const st = getTaskItemStyle(ev.color, prog, isDark);
+          const shortDate = dKey.slice(5).replace('-', '/');
+          return `
+            <button type="button" class="progress-chip text-[10px] px-2 py-1 rounded-md border font-mono flex items-center gap-1.5 cursor-pointer hover:brightness-95 transition-all shadow-2xs"
+              data-id="${ev.id}" data-date="${dKey}" style="background-color: ${st.bg}; border-color: ${st.border}; color: ${st.text};"
+              title="${dKey}: できた度合 ${prog}%（ダブルクリックで編集）">
+              <span class="opacity-75">${shortDate}</span>
+              <span class="font-bold">${prog}%</span>
+            </button>
+          `;
+        }).join('');
 
         card.innerHTML = `
           <div class="flex items-start justify-between">
@@ -821,7 +1034,7 @@
               <p class="text-[11px] text-gray-400 dark:text-gray-400 font-mono">📅 期間: ${ev.startDate} 〜 ${ev.endDate || ev.startDate} (${totalDays}日間)</p>
             </div>
             <div class="flex items-center gap-2">
-              <button class="edit-btn p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors" title="編集">
+              <button class="edit-btn p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-[#3c4043] transition-colors" title="目標の編集">
                 <i data-lucide="settings" class="w-4 h-4"></i>
               </button>
               <button class="delete-btn p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors" title="削除">
@@ -832,10 +1045,19 @@
           <div class="mt-3">
             <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-1">
               <span>進捗状況</span>
-              <span class="font-bold text-gray-700 dark:text-gray-200">${doneDays} / ${totalDays} 日完了 (${progressRate}%)</span>
+              <span class="font-bold text-gray-700 dark:text-gray-200">${earnedDaysEquiv} / ${totalDays} 日分 (${progressRate}%)</span>
             </div>
             <div class="w-full bg-gray-100 dark:bg-[#1e1e1e] h-2 rounded-full overflow-hidden">
               <div class="h-full transition-all duration-300 ${progressRate === 100 ? 'bg-[#84cc16] dark:bg-[#2ea043]' : 'bg-[#1a73e8]'}" style="width: ${progressRate}%"></div>
+            </div>
+          </div>
+          <div class="mt-3 pt-2.5 border-t border-gray-100 dark:border-[#3c4043]/60">
+            <div class="text-[11px] text-gray-400 mb-1.5 flex items-center justify-between">
+              <span>日ごとの達成度（ダブルクリックで入力）</span>
+              <span class="text-[10px]">0%: 白 〜 100%: 濃</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              ${chipsHtml}
             </div>
           </div>
         `;
@@ -848,6 +1070,17 @@
             renderView();
           }
         };
+
+        card.querySelectorAll('.progress-chip').forEach(btn => {
+          btn.ondblclick = (e) => {
+            e.stopPropagation();
+            openProgressModal(btn.dataset.id, btn.dataset.date);
+          };
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            openProgressModal(btn.dataset.id, btn.dataset.date);
+          };
+        });
 
         container.appendChild(card);
       });
@@ -891,24 +1124,114 @@
     }
 
     function updateProgress() {
-      const totalNormDays = userEvents.reduce((acc, ev) => acc + calculateDaysCount(ev.startDate, ev.endDate), 0);
-      const totalDoneDays = userEvents.reduce((acc, ev) => acc + Object.keys(ev.completedDates || {}).length, 0);
-      const rate = totalNormDays > 0 ? Math.round((totalDoneDays / totalNormDays) * 100) : 0;
+      let totalNormPoints = 0;
+      let totalEarnedPoints = 0;
 
-      document.getElementById('taskProgressText').textContent = `${totalDoneDays} / ${totalNormDays} 日 (${rate}%)`;
+      userEvents.forEach(ev => {
+        const days = calculateDaysCount(ev.startDate, ev.endDate);
+        totalNormPoints += days * 100;
+        const dateList = getDatesInRange(ev.startDate, ev.endDate);
+        dateList.forEach(dKey => {
+          totalEarnedPoints += getTaskDailyProgress(ev, dKey);
+        });
+      });
+
+      const rate = totalNormPoints > 0 ? Math.round((totalEarnedPoints / totalNormPoints) * 100) : 0;
+      const earnedDaysEquiv = (totalEarnedPoints / 100).toFixed(1);
+      const totalDays = totalNormPoints / 100;
+
+      document.getElementById('taskProgressText').textContent = `${earnedDaysEquiv} / ${totalDays} 日分 (${rate}%)`;
       document.getElementById('taskProgressBar').style.width = `${rate}%`;
     }
 
-    function toggleDailyComplete(eventId, dateKey) {
+    let currentProgressEventId = null;
+    let currentProgressDateKey = null;
+
+    const progressModal = document.getElementById('progressModal');
+    const progressSlider = document.getElementById('progressSlider');
+    const progressDisplayNum = document.getElementById('progressDisplayNum');
+    const progressPreviewBox = document.getElementById('progressPreviewBox');
+
+    function updateProgressModalPreview(val) {
+      const p = Math.max(0, Math.min(100, Math.round(Number(val) || 0)));
+      progressDisplayNum.textContent = p;
+      progressSlider.value = p;
+
+      const ev = userEvents.find(e => e.id === currentProgressEventId);
+      const colorKey = ev ? ev.color : 'blue';
+      const isDark = currentTheme === 'dark';
+      const style = getTaskItemStyle(colorKey, p, isDark);
+
+      progressPreviewBox.style.backgroundColor = style.bg;
+      progressPreviewBox.style.borderColor = style.border;
+      progressPreviewBox.style.color = style.text;
+      if (p === 0) {
+        progressPreviewBox.textContent = '0% (白 - 未着手)';
+      } else if (p === 100) {
+        progressPreviewBox.textContent = '100% (最も濃い色 - 完全達成！🌟)';
+      } else {
+        progressPreviewBox.textContent = `${p}% (できた度合に合わせて濃くなります)`;
+      }
+    }
+
+    function openProgressModal(eventId, dateKey) {
       const ev = userEvents.find(e => e.id === eventId);
       if (!ev) return;
-      if (!ev.completedDates) ev.completedDates = {};
-      if (ev.completedDates[dateKey]) {
-        delete ev.completedDates[dateKey];
+
+      currentProgressEventId = eventId;
+      currentProgressDateKey = dateKey;
+
+      document.getElementById('progressModalDate').textContent = `📅 ${dateKey}`;
+      document.getElementById('progressModalOverallGoal').textContent = ev.overallGoal;
+
+      const dailyGoalEl = document.getElementById('progressModalDailyGoal');
+      const dailyGoalText = document.getElementById('progressModalDailyGoalText');
+      if (ev.dailyGoal) {
+        dailyGoalText.textContent = ev.dailyGoal;
+        dailyGoalEl.classList.remove('hidden');
+        dailyGoalEl.classList.add('flex');
       } else {
-        ev.completedDates[dateKey] = true;
+        dailyGoalEl.classList.add('hidden');
+        dailyGoalEl.classList.remove('flex');
+      }
+
+      const tagEl = document.getElementById('progressModalTag');
+      if (ev.tag) {
+        tagEl.textContent = `#${ev.tag}`;
+        tagEl.className = `text-[10px] font-medium px-2 py-0.5 rounded-full ${colorClasses[ev.color]?.bg || 'bg-blue-600'} text-white`;
+        tagEl.classList.remove('hidden');
+      } else {
+        tagEl.classList.add('hidden');
+      }
+
+      const currentVal = getTaskDailyProgress(ev, dateKey);
+      updateProgressModalPreview(currentVal);
+
+      progressModal.classList.remove('hidden');
+      progressModal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeProgressModal() {
+      progressModal.classList.add('hidden');
+      progressModal.classList.remove('flex');
+      currentProgressEventId = null;
+      currentProgressDateKey = null;
+    }
+
+    function saveProgressModal() {
+      if (!currentProgressEventId || !currentProgressDateKey) return;
+      const ev = userEvents.find(e => e.id === currentProgressEventId);
+      if (!ev) return;
+      if (!ev.completedDates) ev.completedDates = {};
+      const val = parseInt(progressSlider.value, 10) || 0;
+      if (val === 0) {
+        delete ev.completedDates[currentProgressDateKey];
+      } else {
+        ev.completedDates[currentProgressDateKey] = val;
       }
       saveUserEvents();
+      closeProgressModal();
       renderView();
     }
 
@@ -1217,6 +1540,36 @@
     document.getElementById('addFromCheckListBtn').onclick = () => openModal(selectedDate, selectedDate, '');
     document.getElementById('modalCloseBtn').onclick = closeModal;
     document.getElementById('modalCancelBtn').onclick = closeModal;
+
+    // できた度合入力モーダルのイベント登録
+    progressSlider.oninput = (e) => updateProgressModalPreview(e.target.value);
+    document.querySelectorAll('.quick-rate-btn').forEach(btn => {
+      btn.onclick = () => updateProgressModalPreview(btn.dataset.rate);
+    });
+    document.getElementById('progressModalCloseBtn').onclick = closeProgressModal;
+    document.getElementById('progressCancelBtn').onclick = closeProgressModal;
+    document.getElementById('progressSaveBtn').onclick = saveProgressModal;
+    document.getElementById('progressEditGoalBtn').onclick = () => {
+      const ev = userEvents.find(e => e.id === currentProgressEventId);
+      closeProgressModal();
+      if (ev) openEditModal(ev);
+    };
+
+    progressModal.onclick = (e) => {
+      if (e.target === progressModal) closeProgressModal();
+    };
+    modal.onclick = (e) => {
+      if (e.target === modal) closeModal();
+    };
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeProgressModal();
+        closeModal();
+      } else if (e.key === 'Enter' && !progressModal.classList.contains('hidden')) {
+        saveProgressModal();
+      }
+    });
 
     const searchContainer = document.getElementById('searchContainer');
     const searchInput = document.getElementById('searchInput');
