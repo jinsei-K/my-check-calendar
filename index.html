@@ -705,10 +705,9 @@
     }
 
     // 年表示用日付スタイル（ライト / ダーク対応）
-    function getYearDayStyle(dateKey, isCurrent, isSun, isHol, isToday, isSelected) {
+    function getYearDayStyle(dateKey, isCurrent, isSun, isHol, isToday) {
       const isDark = currentTheme === 'dark';
       if (isToday) return 'bg-[#1a73e8] text-white font-medium shadow-xs';
-      if (isSelected) return isDark ? 'bg-[#174ea6] text-white font-medium' : 'bg-[#d2e3fc] text-[#174ea6] font-medium';
 
       const ach = getDayAchievement(dateKey);
       if (ach.hasTask && ach.rate > 0) {
@@ -950,7 +949,7 @@
           const isHol = !!holidays[d.dateKey];
           const isSun = (idx % 7 === 0);
           const ach = getDayAchievement(d.dateKey);
-          const dayStyle = getYearDayStyle(d.dateKey, d.isCurrent, isSun, isHol, d.dateKey === todayKey, d.dateKey === selectedDate);
+          const dayStyle = getYearDayStyle(d.dateKey, d.isCurrent, isSun, isHol, d.dateKey === todayKey);
 
           const btn = document.createElement('button');
           btn.className = `h-6 w-6 mx-auto my-0.5 rounded-full flex items-center justify-center transition-all text-[11px] ${dayStyle}`;
