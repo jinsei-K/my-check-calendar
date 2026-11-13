@@ -882,7 +882,7 @@
           evEl.style.borderColor = style.border;
           evEl.style.color = style.text;
 
-          evEl.title = `【ダブルクリックでできた度合を入力】\n【全体の目標】${ev.overallGoal}\n【1日の目標】${ev.dailyGoal || 'なし'}\nできた度合: ${progress}%`;
+          evEl.title = `【クリック】目標の編集\n【ダブルクリック】できた度合を入力\n【全体の目標】${ev.overallGoal}\n【1日の目標】${ev.dailyGoal || 'なし'}\nできた度合: ${progress}%`;
 
           const displayTarget = ev.dailyGoal ? ev.dailyGoal : ev.overallGoal;
           const subTargetHtml = ev.dailyGoal ? `<div class="text-[9px] truncate mt-0.5" style="color: ${style.subText}"><span class="truncate">🎯 ${ev.overallGoal}</span></div>` : '';
@@ -890,21 +890,45 @@
           evEl.innerHTML = `
             <div class="flex items-center justify-between gap-1 w-full">
               <span class="truncate font-medium">${displayTarget}</span>
-              <span class="text-[9px] font-mono font-bold px-1 py-0.2 rounded shrink-0 border" style="background-color: ${style.badgeBg}; border-color: ${style.badgeBorder}; color: ${style.badgeText};">${progress}%</span>
+              <span class="progress-badge text-[9px] font-mono font-bold px-1 py-0.2 rounded shrink-0 border hover:scale-105 transition-transform" style="background-color: ${style.badgeBg}; border-color: ${style.badgeBorder}; color: ${style.badgeText};" title="クリックで達成度を入力">${progress}%</span>
             </div>
             ${subTargetHtml}
           `;
 
+          let clickTimer = null;
+
+          // ワンクリックで目標の編集を開く（ダブルクリック判定のため250ms待機）
+          evEl.onclick = (e) => {
+            e.stopPropagation();
+            if (clickTimer) clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => {
+              openEditModal(ev);
+              clickTimer = null;
+            }, 250);
+          };
+
           // ダブルクリックでできた度合を入力モーダルを開く
           evEl.ondblclick = (e) => {
             e.stopPropagation();
+            if (clickTimer) {
+              clearTimeout(clickTimer);
+              clickTimer = null;
+            }
             openProgressModal(ev.id, cell.dateKey);
           };
 
-          // クリックでの誤動作防止（シングルクリックでセル全体のモーダルが開かないようにする）
-          evEl.onclick = (e) => {
-            e.stopPropagation();
-          };
+          // バッジ部分をクリックした時は直接達成度入力を開く
+          const badgeEl = evEl.querySelector('.progress-badge');
+          if (badgeEl) {
+            badgeEl.onclick = (e) => {
+              e.stopPropagation();
+              if (clickTimer) {
+                clearTimeout(clickTimer);
+                clickTimer = null;
+              }
+              openProgressModal(ev.id, cell.dateKey);
+            };
+          }
 
           eventsContainer.appendChild(evEl);
         });
