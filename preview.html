@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>空のWebサイト - チェックカレンダー</title>
+  <title>勉強の芝 - チェックカレンダー</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -33,6 +34,7 @@
   <!-- タイトルバー -->
   <div class="bg-[#202124] text-[#e8eaed] text-xs px-3 py-1 flex items-center justify-between select-none shrink-0 border-b border-[#3c4043]/40">
     <span class="font-medium tracking-wide">空のWebサイト</span>
+    <span class="font-medium tracking-wide">勉強の芝</span>
     <span class="text-[11px] text-gray-400">チェックカレンダー - 達成度黄緑ヒートマップ & ダークモード対応</span>
   </div>
 
@@ -543,21 +545,6 @@
     function getAllEvents(y) {
       const holidays = getJapaneseHolidays(y);
       const list = [...userEvents];
-      Object.entries(holidays).forEach(([dateStr, name]) => {
-        if (!list.some(e => e.startDate === dateStr && (e.overallGoal === name || e.title === name))) {
-          list.push({
-            id: `sys-holiday-${dateStr}`,
-            overallGoal: name,
-            dailyGoal: '',
-            startDate: dateStr,
-            endDate: dateStr,
-            tag: '祝日',
-            color: 'green',
-            completedDates: {},
-            isHoliday: true
-          });
-        }
-      });
       return { list, holidays };
     }
 
@@ -633,18 +620,18 @@
         const d = daysInPrev - i;
         const prevDate = new Date(currentYear, currentMonth - 2, d);
         const k = formatDateKey(prevDate.getFullYear(), prevDate.getMonth() + 1, d);
-        days.push({ dateKey: k, display: d === 1 ? `${prevDate.getMonth() + 1}月1日` : `${d}`, isCurrent: false, dayNum: d, isHol: !!holidays[k] });
+        days.push({ dateKey: k, display: d === 1 ? `${prevDate.getMonth() + 1}月1日` : `${d}`, isCurrent: false, dayNum: d, isHol: !!holidays[k], holidayName: holidays[k] || '' });
       }
       for (let d = 1; d <= daysInMonth; d++) {
         const k = formatDateKey(currentYear, currentMonth, d);
-        days.push({ dateKey: k, display: d === 1 ? `${currentMonth}月1日` : `${d}`, isCurrent: true, dayNum: d, isHol: !!holidays[k] });
+        days.push({ dateKey: k, display: d === 1 ? `${currentMonth}月1日` : `${d}`, isCurrent: true, dayNum: d, isHol: !!holidays[k], holidayName: holidays[k] || '' });
       }
       const totalSlots = days.length <= 35 ? 35 : 42;
       const remaining = totalSlots - days.length;
       for (let d = 1; d <= remaining; d++) {
         const nextDate = new Date(currentYear, currentMonth, d);
         const k = formatDateKey(nextDate.getFullYear(), nextDate.getMonth() + 1, d);
-        days.push({ dateKey: k, display: d === 1 ? `${nextDate.getMonth() + 1}月1日` : `${d}`, isCurrent: false, dayNum: d, isHol: !!holidays[k] });
+        days.push({ dateKey: k, display: d === 1 ? `${nextDate.getMonth() + 1}月1日` : `${d}`, isCurrent: false, dayNum: d, isHol: !!holidays[k], holidayName: holidays[k] || '' });
       }
 
       mainGrid.className = `flex-1 grid grid-cols-7 ${totalSlots > 35 ? 'grid-rows-6' : 'grid-rows-5'} bg-white dark:bg-[#1e1e1e]`;
@@ -671,12 +658,13 @@
 
         const isToday = cell.dateKey === todayKey;
         let dayNumHtml = '';
+        const holTitleAttr = cell.holidayName ? `title="${cell.holidayName}"` : '';
         if (isToday) {
-          dayNumHtml = `<div class="w-6 h-6 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-xs font-medium shadow-xs">${cell.dayNum}</div>`;
+          dayNumHtml = `<div ${holTitleAttr} class="w-6 h-6 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-xs font-medium shadow-xs">${cell.dayNum}</div>`;
         } else {
           const colIdx = idx % 7;
           let textColor = cell.isCurrent ? (isSunOrHol ? 'text-red-500 font-semibold' : colIdx === 6 ? 'text-blue-500' : (isDark ? 'text-gray-200' : 'text-gray-800')) : (isDark ? 'text-gray-600 font-light' : 'text-gray-400 font-light');
-          dayNumHtml = `<span class="text-xs ${textColor}">${cell.display}</span>`;
+          dayNumHtml = `<span ${holTitleAttr} class="text-xs ${textColor}">${cell.display}</span>`;
         }
 
         const dateHeader = document.createElement('div');
@@ -703,16 +691,9 @@
         });
 
         dayEvents.forEach(ev => {
+          if (ev.isHoliday) return;
           const c = colorClasses[ev.color] || colorClasses.blue;
           const isDailyDone = !!ev.completedDates?.[cell.dateKey];
-
-          if (ev.isHoliday) {
-            const holEl = document.createElement('div');
-            holEl.className = 'bg-[#137333] text-white text-[11px] leading-tight px-1.5 py-0.5 rounded font-normal truncate shadow-xs';
-            holEl.textContent = ev.overallGoal;
-            eventsContainer.appendChild(holEl);
-            return;
-          }
 
           const evEl = document.createElement('div');
           evEl.className = `flex flex-col p-1 text-[11px] leading-tight font-normal rounded shadow-xs transition-all cursor-pointer border ${

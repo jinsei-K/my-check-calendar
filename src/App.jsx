@@ -31,14 +31,6 @@ const COLOR_OPTIONS = [
   { id: 'purple', name: 'パープル', bg: 'bg-[#a142f4]', border: 'border-[#a142f4]', text: 'text-white' },
 ];
 
-const PRESET_TAGS = [
-  { id: '勉強', name: '勉強', icon: '📚', color: 'blue' },
-  { id: '仕事', name: '仕事', icon: '💼', color: 'yellow' },
-  { id: '運動', name: '運動', icon: '🏃', color: 'green' },
-  { id: '読書', name: '読書', icon: '📖', color: 'purple' },
-  { id: '趣味', name: '趣味', icon: '🎨', color: 'red' },
-];
-
 function formatDateKey(year, month, day) {
   const m = String(month).padStart(2, '0');
   const d = String(day).padStart(2, '0');
@@ -195,7 +187,16 @@ export default function App() {
   const [userEvents, setUserEvents] = useState(() => {
     try {
       const saved = localStorage.getItem('check_calendar_events');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // 例示で入っていた初期サンプルのタグ（勉強、運動など）をクリア
+        return parsed.map(ev => {
+          if (ev.id.startsWith('sample-') && (ev.tag === '勉強' || ev.tag === '運動')) {
+            return { ...ev, tag: '' };
+          }
+          return ev;
+        });
+      }
     } catch (e) {
       console.error(e);
     }
@@ -206,7 +207,7 @@ export default function App() {
         dailyGoal: '1日50単語暗記＆確認テスト',
         startDate: '2026-11-04',
         endDate: '2026-11-08',
-        tag: '勉強',
+        tag: '',
         color: 'blue',
         completedDates: { '2026-11-04': true, '2026-11-05': true, '2026-11-06': true },
         isHoliday: false,
@@ -217,7 +218,7 @@ export default function App() {
         dailyGoal: '午前過去問 20問解答＆見直し',
         startDate: '2026-11-16',
         endDate: '2026-11-20',
-        tag: '勉強',
+        tag: '',
         color: 'purple',
         completedDates: { '2026-11-16': true },
         isHoliday: false,
@@ -228,7 +229,7 @@ export default function App() {
         dailyGoal: '朝3kmジョギング',
         startDate: '2026-11-01',
         endDate: '2026-11-07',
-        tag: '運動',
+        tag: '',
         color: 'green',
         completedDates: { '2026-11-01': true, '2026-11-02': true, '2026-11-03': true, '2026-11-04': true },
         isHoliday: false,
@@ -251,7 +252,7 @@ export default function App() {
     dailyGoal: '',
     startDate: '2026-11-11',
     endDate: '2026-11-11',
-    tag: '勉強',
+    tag: '',
     color: 'blue',
     isHoliday: false,
   });
@@ -265,26 +266,8 @@ export default function App() {
   }, [currentYear]);
 
   const allEvents = useMemo(() => {
-    const list = [...userEvents];
-
-    Object.entries(yearHolidays).forEach(([dateStr, name]) => {
-      if (!list.some(e => e.startDate === dateStr && (e.overallGoal === name || e.title === name))) {
-        list.push({
-          id: `sys-holiday-${dateStr}`,
-          overallGoal: name,
-          dailyGoal: '',
-          startDate: dateStr,
-          endDate: dateStr,
-          tag: '祝日',
-          color: 'green',
-          completedDates: {},
-          isHoliday: true,
-        });
-      }
-    });
-
-    return list;
-  }, [userEvents, yearHolidays]);
+    return [...userEvents];
+  }, [userEvents]);
 
   // 達成度計算
   const getDayAchievement = useMemo(() => {
@@ -414,6 +397,7 @@ export default function App() {
         isCurrentMonth: false,
         isToday: dateKey === todayKey,
         isHoliday: !!yearHolidays[dateKey],
+        holidayName: yearHolidays[dateKey] || '',
       });
     }
 
@@ -428,6 +412,7 @@ export default function App() {
         isCurrentMonth: true,
         isToday: dateKey === todayKey,
         isHoliday: !!yearHolidays[dateKey],
+        holidayName: yearHolidays[dateKey] || '',
       });
     }
 
@@ -445,6 +430,7 @@ export default function App() {
         isCurrentMonth: false,
         isToday: dateKey === todayKey,
         isHoliday: !!yearHolidays[dateKey],
+        holidayName: yearHolidays[dateKey] || '',
       });
     }
 
@@ -1043,11 +1029,15 @@ export default function App() {
                         ) : <div className="w-4" />}
 
                         {cell.isToday ? (
-                          <div className="w-6 h-6 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-xs font-medium shadow-xs">
+                          <div
+                            className="w-6 h-6 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-xs font-medium shadow-xs"
+                            title={cell.holidayName || undefined}
+                          >
                             {cell.day}
                           </div>
                         ) : (
                           <span
+                            title={cell.holidayName || undefined}
                             className={`text-xs ${
                               cell.isCurrentMonth
                                 ? (isSundayOrHoliday ? 'text-red-500 font-medium' : idx % 7 === 6 ? 'text-blue-500' : isDark ? 'text-gray-200' : 'text-gray-800')
@@ -1066,20 +1056,9 @@ export default function App() {
                       {/* イベントリスト */}
                       <div className="flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar">
                         {dayEvents.map((ev) => {
+                          if (ev.isHoliday) return null;
                           const colorObj = COLOR_OPTIONS.find(c => c.id === ev.color) || COLOR_OPTIONS[0];
                           const isDailyDone = !!ev.completedDates?.[cell.id];
-
-                          if (ev.isHoliday) {
-                            return (
-                              <div
-                                key={`${ev.id}-${cell.id}`}
-                                className="bg-[#137333] text-white text-[11px] leading-tight px-1.5 py-0.5 rounded font-normal truncate shadow-xs"
-                                title={ev.overallGoal}
-                              >
-                                {ev.overallGoal}
-                              </div>
-                            );
-                          }
 
                           return (
                             <div
